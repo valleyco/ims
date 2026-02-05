@@ -36,14 +36,20 @@ npm install
 
 3. **Configure API Token**
 
-Create a `.env` file in the root directory with your IMS API token:
+Copy the example environment file and add your IMS API token:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` and replace `your-ims-api-token-here` with your actual API token:
 
 ```
-IMS_API_TOKEN=your-api-token-here
+IMS_API_TOKEN=your-actual-token-here
 PORT=3000
 ```
 
-The API token is already configured from the existing `example.php` file.
+**⚠️ Never commit the `.env` file - it contains secrets!**
 
 ## Usage
 
@@ -101,7 +107,8 @@ meteorologic/
 ├── examples/                # Example files
 ├── package.json             # Dependencies and scripts
 ├── tsconfig.json            # TypeScript configuration
-├── .env                     # Configuration (API token)
+├── .env.example             # Environment template (safe to commit)
+├── .env                     # Configuration (NOT in git - contains secrets)
 └── README.md                # This file
 ```
 

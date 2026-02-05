@@ -135,6 +135,59 @@ This is a **TypeScript backend** with **vanilla JavaScript frontend**:
 - API Documentation: `docs/api/`
 - Architecture Docs: `docs/architecture/`
 
+## Security Rules - CRITICAL
+
+### ⚠️ NEVER COMMIT SECRETS TO GIT
+
+**ABSOLUTELY FORBIDDEN** - Never include secrets in git-tracked code:
+
+❌ **NEVER commit these:**
+- API keys, tokens, passwords
+- Database credentials
+- Private keys, certificates
+- OAuth secrets
+- Any sensitive configuration values
+- Real email addresses or phone numbers in examples
+- Production URLs with embedded credentials
+
+✅ **ALWAYS use `.env` file for secrets:**
+```bash
+# .env (in .gitignore)
+IMS_API_TOKEN=actual-secret-token-here
+DATABASE_URL=postgres://user:pass@localhost/db
+```
+
+✅ **In code, use environment variables:**
+```typescript
+const API_TOKEN = process.env.IMS_API_TOKEN;  // ✅ Good
+const API_TOKEN = 'abc123-secret-key';        // ❌ NEVER!
+```
+
+✅ **For documentation/examples, use placeholders:**
+```bash
+# .env.example (safe to commit)
+IMS_API_TOKEN=your-api-token-here
+PORT=3000
+```
+
+### Pre-Commit Checklist
+
+Before committing ANY code, verify:
+1. ✅ No hardcoded API keys or tokens
+2. ✅ No passwords or credentials
+3. ✅ `.env` file is in `.gitignore`
+4. ✅ Only `.env.example` with placeholders is committed
+5. ✅ No real production URLs with credentials
+
+### If You Accidentally Commit a Secret
+
+1. **STOP** - Do not just delete it in a new commit
+2. Rotate/invalidate the secret immediately
+3. Remove from git history (use `git filter-branch` or BFG Repo-Cleaner)
+4. Add to `.gitignore` to prevent recurrence
+
+**REMEMBER:** Once a secret is in git history, assume it's compromised!
+
 ## Project Context
 
 This is a weather forecast application using:
