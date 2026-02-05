@@ -1,0 +1,922 @@
+openapi: 3.0.3
+info:
+  title: Israel Meteorological Service (IMS) API
+  description: |
+    The Israel Meteorological Service API provides access to 10-minute interval meteorological data
+    from approximately 85 automatic weather stations across Israel. The API enables automated data
+    retrieval near real-time for parameters such as temperature, humidity, pressure, precipitation,
+    wind, and radiation.
+
+    ## Key Features
+    - Real-time weather data from 85+ stations
+    - 10-minute measurement intervals
+    - Historical data access
+    - Multiple meteorological parameters
+    - JSON response format
+
+    ## Authentication
+    All requests require an API token. Contact ims@ims.gov.il to obtain your token.
+
+    ## Time Format
+    All timestamps are in Local Standard Time (LST) - winter time throughout the year.
+    During daylight saving time, there will be a 1-hour difference between displayed time and actual time.
+
+  version: 1.0.0
+  contact:
+    name: Israel Meteorological Service
+    email: ims@ims.gov.il
+    url: https://ims.gov.il
+  license:
+    name: IMS API License
+    url: https://ims.gov.il/en/terms
+
+servers:
+  - url: https://api.ims.gov.il/v1/envista
+    description: Production server
+
+security:
+  - ApiToken: []
+
+tags:
+  - name: Stations
+    description: Station metadata operations
+  - name: Regions
+    description: Region metadata operations
+  - name: Station Data
+    description: Meteorological data from stations
+  - name: Latest Data
+    description: Most recent measurements
+  - name: Historical Data
+    description: Historical measurements
+
+paths:
+  /stations:
+    get:
+      tags:
+        - Stations
+      summary: Get all weather stations
+      description: Returns metadata for all weather stations in the IMS network
+      operationId: getAllStations
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Station'
+              examples:
+                stations:
+                  value:
+                    - stationId: 178
+                      name: "Jerusalem Centre"
+                      location:
+                        latitude: 31.7806
+                        longitude: 35.2239
+                        elevation: 810
+                      regionId: 1
+                      active: true
+                      monitors:
+                        - channelId: 7
+                          name: "TD"
+                          active: true
+                          typeId: "temperature"
+                          units: "degC"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}:
+    get:
+      tags:
+        - Stations
+      summary: Get specific station
+      description: Returns detailed metadata for a specific weather station
+      operationId: getStationById
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Station'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /regions:
+    get:
+      tags:
+        - Regions
+      summary: Get all regions
+      description: Returns information about all regions including stations in each region
+      operationId: getAllRegions
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Region'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /regions/{regionId}:
+    get:
+      tags:
+        - Regions
+      summary: Get specific region
+      description: Returns detailed information for a specific region
+      operationId: getRegionById
+      parameters:
+        - $ref: '#/components/parameters/RegionId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Region'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}/data/latest:
+    get:
+      tags:
+        - Latest Data
+        - Station Data
+      summary: Get latest readings for all channels
+      description: Returns the most recent measurements for all channels at a station
+      operationId: getLatestDataAllChannels
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDataResponse'
+              examples:
+                latestData:
+                  value:
+                    stationId: 178
+                    datetime: "2026-02-04T14:30:00+02:00"
+                    channels:
+                      - id: 7
+                        name: "TD"
+                        status: 1
+                        valid: true
+                        value: 18.5
+                      - id: 8
+                        name: "RH"
+                        status: 1
+                        valid: true
+                        value: 65
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}/data/{channelId}/latest:
+    get:
+      tags:
+        - Latest Data
+        - Station Data
+      summary: Get latest reading for specific channel
+      description: Returns the most recent measurement for a specific channel at a station
+      operationId: getLatestDataByChannel
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+        - $ref: '#/components/parameters/ChannelId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDataResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}/data/earliest:
+    get:
+      tags:
+        - Historical Data
+        - Station Data
+      summary: Get earliest readings for all channels
+      description: Returns the oldest available measurements for all channels at a station
+      operationId: getEarliestDataAllChannels
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDataResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}/data/{channelId}/earliest:
+    get:
+      tags:
+        - Historical Data
+        - Station Data
+      summary: Get earliest reading for specific channel
+      description: Returns the oldest available measurement for a specific channel at a station
+      operationId: getEarliestDataByChannel
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+        - $ref: '#/components/parameters/ChannelId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDataResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}/data/daily:
+    get:
+      tags:
+        - Station Data
+      summary: Get current day data for all channels
+      description: Returns all measurements from the current day for all channels
+      operationId: getDailyDataAllChannels
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDataArrayResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}/data/{channelId}/daily:
+    get:
+      tags:
+        - Station Data
+      summary: Get current day data for specific channel
+      description: Returns all measurements from the current day for a specific channel
+      operationId: getDailyDataByChannel
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+        - $ref: '#/components/parameters/ChannelId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDataArrayResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}/data/monthly:
+    get:
+      tags:
+        - Station Data
+      summary: Get current month data for all channels
+      description: Returns all measurements from the current month for all channels
+      operationId: getMonthlyDataAllChannels
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDataArrayResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}/data/{channelId}/monthly:
+    get:
+      tags:
+        - Station Data
+      summary: Get current month data for specific channel
+      description: Returns all measurements from the current month for a specific channel
+      operationId: getMonthlyDataByChannel
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+        - $ref: '#/components/parameters/ChannelId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDataArrayResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}/data/daily/{year}/{month}/{day}:
+    get:
+      tags:
+        - Historical Data
+        - Station Data
+      summary: Get specific day data for all channels
+      description: Returns all measurements from a specific day for all channels
+      operationId: getSpecificDayDataAllChannels
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+        - $ref: '#/components/parameters/Year'
+        - $ref: '#/components/parameters/Month'
+        - $ref: '#/components/parameters/Day'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDataArrayResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}/data/daily/{channelId}/{year}/{month}/{day}:
+    get:
+      tags:
+        - Historical Data
+        - Station Data
+      summary: Get specific day data for specific channel
+      description: Returns all measurements from a specific day for a specific channel
+      operationId: getSpecificDayDataByChannel
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+        - $ref: '#/components/parameters/ChannelId'
+        - $ref: '#/components/parameters/Year'
+        - $ref: '#/components/parameters/Month'
+        - $ref: '#/components/parameters/Day'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDataArrayResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}/data/monthly/{year}/{month}:
+    get:
+      tags:
+        - Historical Data
+        - Station Data
+      summary: Get specific month data for all channels
+      description: Returns all measurements from a specific month for all channels
+      operationId: getSpecificMonthDataAllChannels
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+        - $ref: '#/components/parameters/Year'
+        - $ref: '#/components/parameters/Month'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDataArrayResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}/data/{channelId}/monthly/{year}/{month}:
+    get:
+      tags:
+        - Historical Data
+        - Station Data
+      summary: Get specific month data for specific channel
+      description: Returns all measurements from a specific month for a specific channel
+      operationId: getSpecificMonthDataByChannel
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+        - $ref: '#/components/parameters/ChannelId'
+        - $ref: '#/components/parameters/Year'
+        - $ref: '#/components/parameters/Month'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDataArrayResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}/data:
+    get:
+      tags:
+        - Historical Data
+        - Station Data
+      summary: Get data by date range for all channels
+      description: Returns all measurements within a date range for all channels
+      operationId: getDateRangeDataAllChannels
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDataArrayResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stations/{stationId}/data/{channelId}:
+    get:
+      tags:
+        - Historical Data
+        - Station Data
+      summary: Get data by date range for specific channel
+      description: Returns all measurements within a date range for a specific channel
+      operationId: getDateRangeDataByChannel
+      parameters:
+        - $ref: '#/components/parameters/StationId'
+        - $ref: '#/components/parameters/ChannelId'
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDataArrayResponse'
+              examples:
+                temperatureData:
+                  value:
+                    stationId: 178
+                    channelId: 7
+                    data:
+                      - datetime: "2026-02-01T00:00:00+02:00"
+                        channels:
+                          - id: 7
+                            name: "TD"
+                            status: 1
+                            valid: true
+                            value: 15.2
+                      - datetime: "2026-02-01T00:10:00+02:00"
+                        channels:
+                          - id: 7
+                            name: "TD"
+                            status: 1
+                            valid: true
+                            value: 15.1
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    ApiToken:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: |
+        API Token authentication. Use format: `ApiToken YOUR_TOKEN_HERE`
+
+        To obtain a token, contact: ims@ims.gov.il
+
+  parameters:
+    StationId:
+      name: stationId
+      in: path
+      required: true
+      description: Unique identifier for the weather station
+      schema:
+        type: integer
+        example: 178
+        minimum: 1
+
+    ChannelId:
+      name: channelId
+      in: path
+      required: true
+      description: |
+        Channel identifier for the meteorological parameter.
+        Common channels:
+        - 1: Rain (mm)
+        - 4: Wind Speed (m/sec)
+        - 5: Wind Direction (degrees)
+        - 7: Temperature (°C)
+        - 8: Relative Humidity (%)
+        - 10: Barometric Pressure (mb)
+      schema:
+        type: integer
+        example: 7
+        minimum: 1
+
+    RegionId:
+      name: regionId
+      in: path
+      required: true
+      description: Unique identifier for the region
+      schema:
+        type: integer
+        example: 1
+        minimum: 1
+
+    Year:
+      name: year
+      in: path
+      required: true
+      description: Year (4 digits)
+      schema:
+        type: integer
+        example: 2026
+        minimum: 2000
+        maximum: 2100
+
+    Month:
+      name: month
+      in: path
+      required: true
+      description: Month (2 digits, 01-12)
+      schema:
+        type: string
+        pattern: '^(0[1-9]|1[0-2])$'
+        example: "02"
+
+    Day:
+      name: day
+      in: path
+      required: true
+      description: Day (2 digits, 01-31)
+      schema:
+        type: string
+        pattern: '^(0[1-9]|[12][0-9]|3[01])$'
+        example: "15"
+
+    FromDate:
+      name: from
+      in: query
+      required: true
+      description: Start date for data range (format YYYY/MM/DD)
+      schema:
+        type: string
+        format: date
+        example: "2026/02/01"
+
+    ToDate:
+      name: to
+      in: query
+      required: true
+      description: End date for data range (format YYYY/MM/DD)
+      schema:
+        type: string
+        format: date
+        example: "2026/02/04"
+
+  schemas:
+    Station:
+      type: object
+      properties:
+        stationId:
+          type: integer
+          description: Unique station identifier
+          example: 178
+        name:
+          type: string
+          description: Station name
+          example: "Jerusalem Centre"
+        location:
+          $ref: '#/components/schemas/Location'
+        regionId:
+          type: integer
+          description: Region identifier
+          example: 1
+        active:
+          type: boolean
+          description: Whether the station is currently active
+          example: true
+        monitors:
+          type: array
+          description: List of channels (parameters) monitored at this station
+          items:
+            $ref: '#/components/schemas/Monitor'
+
+    Location:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+          description: Latitude in decimal degrees
+          example: 31.7806
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          description: Longitude in decimal degrees
+          example: 35.2239
+          minimum: -180
+          maximum: 180
+        elevation:
+          type: number
+          format: double
+          description: Elevation above sea level in meters
+          example: 810
+
+    Monitor:
+      type: object
+      properties:
+        channelId:
+          type: integer
+          description: Channel identifier
+          example: 7
+        name:
+          type: string
+          description: Channel name (e.g., TD for temperature)
+          example: "TD"
+        active:
+          type: boolean
+          description: Whether this channel is currently active
+          example: true
+        typeId:
+          type: string
+          description: Type of measurement
+          example: "temperature"
+        units:
+          type: string
+          description: Units of measurement
+          example: "degC"
+          enum:
+            - "degC"
+            - "%"
+            - "m/sec"
+            - "deg"
+            - "mm"
+            - "mb"
+            - "w/m2"
+            - "hhmm"
+
+    Region:
+      type: object
+      properties:
+        regionId:
+          type: integer
+          description: Unique region identifier
+          example: 1
+        name:
+          type: string
+          description: Region name
+          example: "Jerusalem District"
+        stations:
+          type: array
+          description: List of stations in this region
+          items:
+            type: integer
+            description: Station ID
+          example: [23, 178, 245]
+
+    StationDataResponse:
+      type: object
+      properties:
+        stationId:
+          type: integer
+          description: Station identifier
+          example: 178
+        datetime:
+          type: string
+          format: date-time
+          description: Measurement timestamp in ISO 8601 format (LST - Local Standard Time)
+          example: "2026-02-04T14:30:00+02:00"
+        channels:
+          type: array
+          description: Array of channel measurements
+          items:
+            $ref: '#/components/schemas/ChannelReading'
+
+    StationDataArrayResponse:
+      type: object
+      properties:
+        stationId:
+          type: integer
+          description: Station identifier
+          example: 178
+        channelId:
+          type: integer
+          description: Channel identifier (if specific channel requested)
+          example: 7
+        data:
+          type: array
+          description: Array of measurements
+          items:
+            type: object
+            properties:
+              datetime:
+                type: string
+                format: date-time
+                description: Measurement timestamp
+                example: "2026-02-04T14:30:00+02:00"
+              channels:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChannelReading'
+
+    ChannelReading:
+      type: object
+      required:
+        - id
+        - name
+        - status
+        - valid
+        - value
+      properties:
+        id:
+          type: integer
+          description: Channel identifier
+          example: 7
+        name:
+          type: string
+          description: Channel name
+          example: "TD"
+          enum:
+            - "BP"
+            - "DiffR"
+            - "Grad"
+            - "NIP"
+            - "Rain"
+            - "RH"
+            - "STDwd"
+            - "TD"
+            - "TDmax"
+            - "TDmin"
+            - "TG"
+            - "Time"
+            - "WD"
+            - "WDmax"
+            - "WS"
+            - "Ws10mm"
+            - "WS1mm"
+            - "WSmax"
+        status:
+          type: integer
+          description: Data quality status (1 = valid, 2 = invalid)
+          example: 1
+          enum: [1, 2]
+        valid:
+          type: boolean
+          description: Whether the measurement is valid
+          example: true
+        value:
+          type: number
+          format: double
+          description: Measured value
+          example: 18.5
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "Unauthorized"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid or missing API token"
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2026-02-04T14:30:00Z"
+
+  responses:
+    BadRequestError:
+      description: Bad Request - Invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "BadRequest"
+            message: "Invalid date format. Use YYYY/MM/DD"
+            timestamp: "2026-02-04T14:30:00Z"
+
+    UnauthorizedError:
+      description: Unauthorized - Invalid or missing API token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Unauthorized"
+            message: "Invalid or missing API token"
+            timestamp: "2026-02-04T14:30:00Z"
+
+    NotFoundError:
+      description: Not Found - Resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "NotFound"
+            message: "Station with ID 999 not found"
+            timestamp: "2026-02-04T14:30:00Z"
+
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "InternalServerError"
+            message: "An unexpected error occurred"
+            timestamp: "2026-02-04T14:30:00Z"

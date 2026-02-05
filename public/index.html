@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Israel Weather Forecast</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🌤️ Israel Weather Forecast</h1>
+            <p class="subtitle">Real-time weather data from IMS stations</p>
+        </header>
+
+        <!-- Location Selection Card -->
+        <div class="card location-card">
+            <h2>📍 Select Your Location</h2>
+            <div class="location-controls">
+                <button id="detectLocationBtn" class="btn btn-primary">
+                    <span class="btn-icon">📍</span>
+                    <span class="btn-text">Detect My Location</span>
+                    <span class="spinner hidden" id="locationSpinner"></span>
+                </button>
+                <div class="divider">
+                    <span>or enter manually</span>
+                </div>
+                <div class="manual-input">
+                    <input type="number" id="latInput" placeholder="Latitude (e.g., 32.0853)" step="0.0001">
+                    <input type="number" id="lonInput" placeholder="Longitude (e.g., 34.7818)" step="0.0001">
+                    <button id="manualLocationBtn" class="btn btn-secondary">Find Station</button>
+                </div>
+            </div>
+            <div id="locationStatus" class="status-message"></div>
+        </div>
+
+        <!-- Date Range Selector -->
+        <div class="card date-range-card">
+            <h2>📅 Select Time Period</h2>
+            <div class="date-range-buttons">
+                <button class="range-btn active" data-period="today">Today</button>
+                <button class="range-btn" data-period="week">This Week</button>
+                <button class="range-btn" data-period="month">This Month</button>
+            </div>
+        </div>
+
+        <!-- Weather Display Card -->
+        <div id="weatherCard" class="card weather-card hidden">
+            <div class="weather-loading hidden" id="weatherLoading">
+                <div class="spinner-large"></div>
+                <p>Loading weather data...</p>
+            </div>
+
+            <div id="weatherContent" class="weather-content hidden">
+                <!-- Station Info -->
+                <div class="station-info">
+                    <h2 id="stationName">Station Name</h2>
+                    <p class="station-details">
+                        <span id="stationLocation">Location</span>
+                        <span class="distance-badge" id="distanceBadge">Distance</span>
+                    </p>
+                </div>
+
+                <!-- Main Temperature Display -->
+                <div class="temperature-hero">
+                    <div class="temp-value">
+                        <span id="currentTemp">--</span>
+                        <span class="temp-unit">°C</span>
+                    </div>
+                    <div class="temp-icon">☀️</div>
+                </div>
+
+                <!-- Weather Metrics Grid -->
+                <div class="weather-grid">
+                    <div class="weather-metric">
+                        <div class="metric-icon">💧</div>
+                        <div class="metric-content">
+                            <div class="metric-label">Humidity</div>
+                            <div class="metric-value" id="humidity">--</div>
+                        </div>
+                    </div>
+
+                    <div class="weather-metric">
+                        <div class="metric-icon">💨</div>
+                        <div class="metric-content">
+                            <div class="metric-label">Wind Speed</div>
+                            <div class="metric-value" id="windSpeed">--</div>
+                        </div>
+                    </div>
+
+                    <div class="weather-metric">
+                        <div class="metric-icon">🧭</div>
+                        <div class="metric-content">
+                            <div class="metric-label">Wind Direction</div>
+                            <div class="metric-value" id="windDirection">--</div>
+                        </div>
+                    </div>
+
+                    <div class="weather-metric">
+                        <div class="metric-icon">🌧️</div>
+                        <div class="metric-content">
+                            <div class="metric-label">Rainfall</div>
+                            <div class="metric-value" id="rainfall">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Info -->
+                <div class="weather-footer">
+                    <p class="date-range-display">
+                        📊 Data for: <span id="dateRangeDisplay">--</span>
+                    </p>
+                    <p class="last-updated">
+                        🕐 Last updated: <span id="lastUpdated">--</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Forecast Section -->
+            <div id="forecastSection" class="forecast-section hidden">
+                <h3 class="forecast-title">📈 Forecast</h3>
+                <div class="forecast-table-container">
+                    <table class="forecast-table" id="forecastTable">
+                        <thead id="forecastTableHead">
+                            <!-- Dynamic headers -->
+                        </thead>
+                        <tbody id="forecastTableBody">
+                            <!-- Dynamic forecast rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorToast" class="toast hidden">
+            <span class="toast-icon">⚠️</span>
+            <span id="errorMessage"></span>
+            <button class="toast-close" onclick="hideError()">×</button>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

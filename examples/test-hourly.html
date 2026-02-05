@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Hourly Forecast Display</title>
+    <link rel="stylesheet" href="public/css/style.css">
+    <style>
+        body { padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .test-container { max-width: 800px; margin: 0 auto; }
+        h1 { color: white; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Hourly Forecast Test</h1>
+        <div class="forecast-table-container">
+            <table class="forecast-table" id="forecastTable">
+                <thead id="forecastTableHead"></thead>
+                <tbody id="forecastTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Simulate forecast data
+        const testData = [];
+        for (let i = 0; i < 24; i++) {
+            const hour = (i) % 24;
+            testData.push({
+                time: `2026-02-04 ${hour.toString().padStart(2, '0')}:00`,
+                temp: (15 + Math.random() * 10).toFixed(1),
+                humidity: (50 + Math.random() * 30).toFixed(0),
+                rain: (Math.random() * 2).toFixed(1)
+            });
+        }
+
+        function displayHourlyForecast(forecastArray, tableHead, tableBody) {
+            console.log('displayHourlyForecast:', {
+                forecastCount: forecastArray.length
+            });
+
+            // Create table
+            tableHead.innerHTML = `
+                <tr>
+                    <th>Time</th>
+                    <th>Temperature</th>
+                    <th>Humidity</th>
+                    <th>Rainfall</th>
+                </tr>
+            `;
+
+            // Display last 24 hours
+            const displayData = forecastArray.slice(-24);
+
+            // Get current hour
+            const now = new Date();
+            const currentHour = now.getHours();
+
+            // Find current hour in data
+            let currentHourIndex = -1;
+            for (let i = displayData.length - 1; i >= 0; i--) {
+                const timeParts = displayData[i].time.split(' ');
+                const hourParts = timeParts[1].split(':');
+                const entryHour = parseInt(hourParts[0], 10);
+
+                if (entryHour === currentHour) {
+                    currentHourIndex = i;
+                    break;
+                }
+            }
+
+            // Reorder data: current hour first, then next hours, then previous hours
+            let reorderedData;
+            if (currentHourIndex !== -1) {
+                reorderedData = [
+                    ...displayData.slice(currentHourIndex),
+                    ...displayData.slice(0, currentHourIndex)
+                ];
+            } else {
+                // If current hour not found, keep original order
+                reorderedData = displayData;
+            }
+
+            console.log('Hourly data processed:', {
+                totalEntries: forecastArray.length,
+                displayingEntries: reorderedData.length,
+                currentHour: currentHour,
+                currentHourIndex: currentHourIndex
+            });
+
+            tableBody.innerHTML = reorderedData.map((entry, index) => {
+                const temp = entry.temp || 'N/A';
+                const humidity = entry.humidity || 'N/A';
+                const rain = entry.rain || '0.0';
+
+                // Parse time from "YYYY-MM-DD HH:00" format and extract hour
+                const timeParts = entry.time.split(' ');
+                const hourParts = timeParts[1].split(':');
+                const hour = hourParts[0];
+
+                // First row is current hour
+                const isCurrent = index === 0;
+                const rowClass = isCurrent ? 'current-hour' : '';
+
+                return `
+                    <tr class="${rowClass}">
+                        <td>${hour}:00</td>
+                        <td>${temp}°C</td>
+                        <td>${humidity}%</td>
+                        <td>${rain} mm</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Run test
+        const tableHead = document.getElementById('forecastTableHead');
+        const tableBody = document.getElementById('forecastTableBody');
+        displayHourlyForecast(testData, tableHead, tableBody);
+
+        console.log('Current hour:', new Date().getHours());
+        console.log('Test data contains hours:', testData.map(d => d.time));
+    </script>
+</body>
+</html>

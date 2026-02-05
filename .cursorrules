@@ -1,0 +1,147 @@
+# Meteorologic Weather Application - Project Rules
+
+## Documentation Organization
+
+This project follows standard open-source documentation conventions. **Always maintain this structure:**
+
+### Documentation Structure
+
+```
+meteorologic/
+├── README.md                    # Main project overview (ONLY .md at root)
+├── docs/
+│   ├── INDEX.md                # Documentation navigation
+│   ├── api/                    # API documentation
+│   │   ├── API.md              # IMS API reference
+│   │   ├── swagger.yaml        # OpenAPI specification
+│   │   └── SWAGGER_*.md        # Swagger guides
+│   ├── architecture/           # System design & technical docs
+│   │   ├── CACHE.md            # Cache system
+│   │   ├── CACHING_SYSTEM.md   # Detailed cache design
+│   │   └── TYPESCRIPT_*.md     # TypeScript docs
+│   ├── features/               # Feature implementation guides
+│   │   ├── *_FEATURE.md        # Feature documentation
+│   │   └── TEST_*.md           # Testing documentation
+│   ├── history/                # Development history
+│   │   ├── *_FIXES.md          # Bug fixes
+│   │   ├── *_SUMMARY.md        # Project summaries
+│   │   └── *_VERIFICATION.md   # Verification docs
+│   └── original/               # Original source materials (PDFs, etc.)
+├── examples/                    # Example and test files
+│   ├── *.php                   # PHP examples
+│   └── *.html                  # HTML test files
+└── src/                        # TypeScript source code
+```
+
+### Documentation Rules
+
+1. **ROOT DIRECTORY**: Only keep `README.md` at the project root. All other documentation goes in `docs/`.
+
+2. **NEW DOCUMENTATION**: When creating new documentation, place it in the appropriate subfolder:
+   - **API changes/integration** → `docs/api/`
+   - **System design/architecture** → `docs/architecture/`
+   - **New features** → `docs/features/`
+   - **Bug fixes/history** → `docs/history/`
+   - **Example code** → `examples/`
+
+3. **UPDATE INDEX**: When adding new documentation files, update `docs/INDEX.md` with a link and brief description.
+
+4. **README LINKS**: For major features or important docs, add a link in the main `README.md` "Documentation" section.
+
+5. **NAMING CONVENTIONS**:
+   - Use UPPERCASE for documentation files: `FEATURE_NAME.md`
+   - Be descriptive: `CACHING_SYSTEM.md` not `cache.md`
+   - Use underscores: `TYPESCRIPT_CONVERSION.md` not `typescript-conversion.md`
+
+## Code Organization
+
+### TypeScript Project
+
+This is a **TypeScript backend** with **vanilla JavaScript frontend**:
+
+- **Backend (TypeScript)**: `src/` → compiles to `dist/`
+  - `src/server.ts` - Express server
+  - `src/cache.ts` - Caching system
+  - `src/imsApi.ts` - IMS API client
+  - `src/utils.ts` - Utility functions
+  - `src/types/` - Type definitions
+
+- **Frontend (Vanilla JS)**: `public/` - no build step
+  - `public/index.html`
+  - `public/js/app.js`
+  - `public/css/style.css`
+
+### Scripts
+
+- `npm run dev` - Development with ts-node
+- `npm run dev:watch` - Development with hot reload
+- `npm run build` - Compile TypeScript to `dist/`
+- `npm start` - Run compiled JavaScript from `dist/`
+
+## Code Style Guidelines
+
+1. **TypeScript**:
+   - Use strict mode (enabled in tsconfig.json)
+   - Define interfaces for all API responses
+   - Use proper type annotations
+   - Export types from respective modules
+
+2. **API Endpoints**:
+   - All endpoints under `/api/` prefix
+   - Use proper HTTP methods (GET for reads, POST for writes)
+   - Include error handling with appropriate status codes
+   - Return JSON responses
+
+3. **Caching**:
+   - Use the cache module with fetcher pattern
+   - Cache stations for 48 hours
+   - Cache forecast data for 24 hours
+   - Always provide a fetcher function for cache.get()
+
+4. **Documentation**:
+   - Document all public functions with JSDoc
+   - Include parameter types and return types
+   - Add usage examples for complex functions
+
+## File Organization Rules
+
+### DO NOT CREATE at Root:
+- ❌ New markdown files (except README.md)
+- ❌ Example/test files
+- ❌ Temporary files
+- ❌ Documentation files
+
+### Files That BELONG at Root:
+- ✅ README.md
+- ✅ package.json, package-lock.json
+- ✅ tsconfig.json
+- ✅ .env, .gitignore
+- ✅ .cursorrules (this file)
+- ✅ start.sh
+- ✅ LICENSE (if exists)
+
+## When Making Changes
+
+1. **Creating Documentation**: Place in appropriate `docs/` subfolder
+2. **Adding Examples**: Place in `examples/` folder
+3. **Adding Features**: Update `docs/features/` with implementation guide
+4. **Fixing Bugs**: Document in `docs/history/`
+5. **Changing Architecture**: Update `docs/architecture/`
+
+## References
+
+- Main README: `README.md`
+- Documentation Index: `docs/INDEX.md`
+- API Documentation: `docs/api/`
+- Architecture Docs: `docs/architecture/`
+
+## Project Context
+
+This is a weather forecast application using:
+- **Backend**: Node.js + Express + TypeScript
+- **Frontend**: Vanilla JavaScript (no framework)
+- **API**: Israel Meteorological Service (IMS) API
+- **Features**: Location detection, nearest station finder, hourly/daily forecasts
+- **Caching**: 2-level cache (memory + file)
+
+Keep this structure clean and professional!
