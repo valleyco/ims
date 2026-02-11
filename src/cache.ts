@@ -210,13 +210,25 @@ export async function get<T>(
       console.log(`⟳ Fetching data for: ${key}`);
       const data = await options.fetcher();
       
-      // Cache the fetched data
+      // Validate data before caching
+      if (data === null || data === undefined) {
+        console.error(`✗ Fetcher returned invalid data for ${key}: null/undefined`);
+        throw new Error('Fetcher returned null or undefined - not caching');
+      }
+      
+      // Additional validation for arrays - warn but still cache
+      if (Array.isArray(data) && data.length === 0) {
+        console.warn(`⚠ Fetcher returned empty array for ${key} - caching anyway`);
+      }
+      
+      // Cache only after validation passes
       setInMemory(key, data);
       await setInFile(key, data);
       
       return data;
     } catch (error) {
       console.error(`✗ Error fetching data for ${key}:`, error);
+      // Do NOT cache failed responses - just throw the error
       throw error;
     }
   }

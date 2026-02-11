@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Tel Aviv-Yafo Forecast</title>
+    <link>https://ims.gov.il</link>
+    <description>5-day weather forecast for Tel Aviv-Yafo</description>
+    <language>en</language>
+    <lastBuildDate>Wed, 11 Feb 2026 09:00:00 GMT</lastBuildDate>
+    
+    <item>
+      <title>Wednesday 12-Feb-2026</title>
+      <description>
+        Partly cloudy. Temperature: 15-22°C. 
+        Humidity: 65%. Wind: NW 5 m/s. 
+        No precipitation expected.
+      </description>
+      <pubDate>Wed, 12 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+    
+    <item>
+      <title>Thursday 13-Feb-2026</title>
+      <description>
+        Sunny and clear. Temperature: 16-24°C. 
+        Humidity: 60%. Wind: W 4 m/s. 
+        No precipitation expected.
+      </description>
+      <pubDate>Thu, 13 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+    
+    <item>
+      <title>Friday 14-Feb-2026</title>
+      <description>
+        Mostly sunny. Temperature: 17-25°C. 
+        Humidity: 58%. Wind: SW 3 m/s. 
+        No precipitation expected.
+      </description>
+      <pubDate>Fri, 14 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+    
+    <item>
+      <title>Saturday 15-Feb-2026</title>
+      <description>
+        Partly cloudy with chance of rain. Temperature: 14-20°C. 
+        Humidity: 75%. Wind: W 6 m/s. 
+        Precipitation: 2-5 mm expected.
+      </description>
+      <pubDate>Sat, 15 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+    
+    <item>
+      <title>Sunday 16-Feb-2026</title>
+      <description>
+        Cloudy with occasional rain. Temperature: 13-18°C. 
+        Humidity: 80%. Wind: NW 7 m/s. 
+        Precipitation: 5-10 mm expected.
+      </description>
+      <pubDate>Sun, 16 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

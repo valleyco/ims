@@ -8,7 +8,8 @@ Welcome to the meteorologic weather application documentation. All documentation
 Located in [`api/`](api/)
 
 - **[API.md](api/API.md)** - Complete IMS API reference in English
-- **[swagger.yaml](api/swagger.yaml)** - OpenAPI 3.0 specification
+- **[swagger.yaml](api/swagger.yaml)** - OpenAPI 3.0 specification for external IMS API
+- **[internal-api.yaml](api/internal-api.yaml)** - OpenAPI 3.0 specification for internal application API
 - **[SWAGGER_README.md](api/SWAGGER_README.md)** - Quick start guide for Swagger
 - **[SWAGGER_USAGE.md](api/SWAGGER_USAGE.md)** - Detailed Swagger usage instructions
 
@@ -32,6 +33,21 @@ Located in [`history/`](history/)
 - **[RECENT_FIXES.md](history/RECENT_FIXES.md)** - Recent bug fixes and improvements
 - **[FIXES_APPLIED.md](history/FIXES_APPLIED.md)** - Historical fixes documentation
 - **[FORECAST_FIX_VERIFICATION.md](history/FORECAST_FIX_VERIFICATION.md)** - Forecast bug fix verification
+
+### XML Integration
+Located in root [`docs/`](.)
+
+- **[XML_FEED_README.md](XML_FEED_README.md)** - Complete XML integration guide
+- **[XML_INTEGRATION_NOTES.md](XML_INTEGRATION_NOTES.md)** - Technical implementation details
+- **[URL_DISCOVERY_GUIDE.md](URL_DISCOVERY_GUIDE.md)** - Step-by-step guide to discover RSS feed URLs
+
+### Recent Fixes & Enhancements
+Located in root [`docs/`](.)
+
+- **[FORECAST_DATE_RANGE_FIX.md](FORECAST_DATE_RANGE_FIX.md)** - Fix for forecast returning past dates instead of future dates
+- **[MOCK_FORECAST_SYSTEM.md](MOCK_FORECAST_SYSTEM.md)** - Mock data generator for when XML feeds are unavailable
+- **[AUTO_XML_DOWNLOAD.md](AUTO_XML_DOWNLOAD.md)** - Automatic XML data management system with scheduling and admin API
+- **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Complete testing infrastructure with Jest (33 passing tests, no external calls)
 
 ### Original Documentation
 Located in [`original/`](original/)

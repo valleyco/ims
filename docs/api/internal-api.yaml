@@ -1,0 +1,773 @@
+openapi: 3.0.3
+info:
+  title: Weather Forecast Application - Internal API
+  description: |
+    Internal API for the Israel Weather Forecast Application. This API provides access to
+    weather forecasts, station data, and alerts using a hybrid data source approach.
+
+    ## Data Sources
+
+    The API uses a hybrid approach:
+    - **Primary**: IMS XML/RSS forecast feeds (professional meteorologist forecasts for 15 cities)
+    - **Fallback**: IMS API real-time observations (10-minute interval data from 187 stations)
+
+    ## Features
+
+    - Automatic location-to-station/city matching
+    - Flexible time ranges (today, week, month)
+    - Hourly and daily forecast aggregation
+    - Weather alerts and warnings
+    - City and sea forecasts
+    - UV index forecasts
+    - 2-level caching system (memory + file)
+
+    ## Response Source
+
+    Many forecast endpoints include a `source` field indicating data origin:
+    - `"xml"`: Using XML/RSS forecast data (primary)
+    - `"station"`: Using station observations (fallback)
+
+  version: 1.0.0
+  contact:
+    name: Weather Forecast Application
+    url: http://localhost:3000
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: http://localhost:3001
+    description: Alternative local server
+
+tags:
+  - name: Stations
+    description: Weather station operations
+  - name: Forecasts
+    description: Weather forecast operations (hybrid data source)
+  - name: Cities
+    description: City-based forecast operations
+  - name: Alerts
+    description: Weather alerts and warnings
+  - name: Cache
+    description: Cache management operations
+
+paths:
+  /api/stations:
+    get:
+      tags:
+        - Stations
+      summary: Get all weather stations
+      description: Returns list of all IMS weather stations (187 stations) with metadata and coordinates
+      operationId: getStations
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Station'
+              example:
+                - stationId: 178
+                  name: "Jerusalem Centre"
+                  shortName: "JERUSALEM"
+                  location:
+                    latitude: 31.7806
+                    longitude: 35.2239
+                  active: true
+                  owner: "ims"
+                  regionId: 1
+                  monitors:
+                    - channelId: 7
+                      name: "TD"
+                      units: "degC"
+                      active: true
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/nearest-station:
+    get:
+      tags:
+        - Stations
+      summary: Find nearest weather station
+      description: Finds the closest weather station to given coordinates using Haversine distance
+      operationId: getNearestStation
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          description: Latitude in decimal degrees
+          schema:
+            type: number
+            format: double
+            minimum: -90
+            maximum: 90
+            example: 32.0853
+        - name: lon
+          in: query
+          required: true
+          description: Longitude in decimal degrees
+          schema:
+            type: number
+            format: double
+            minimum: -180
+            maximum: 180
+            example: 34.7818
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  station:
+                    $ref: '#/components/schemas/Station'
+                  distance:
+                    type: number
+                    description: Distance to station in kilometers
+                    example: 3.7
+              example:
+                station:
+                  stationId: 23
+                  name: "Tel Aviv Coast"
+                  location:
+                    latitude: 32.0717
+                    longitude: 34.7644
+                distance: 3.7
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/forecast:
+    get:
+      tags:
+        - Forecasts
+      summary: Get weather forecast (hybrid)
+      description: |
+        Returns weather forecast using hybrid data source approach:
+        1. Finds nearest city to the station location
+        2. Attempts to load XML forecast for that city
+        3. Falls back to station observations if XML unavailable
+
+        Response includes `source` field indicating data origin.
+      operationId: getForecast
+      parameters:
+        - name: stationId
+          in: query
+          required: true
+          description: Station ID to get forecast for
+          schema:
+            type: integer
+            example: 178
+        - name: period
+          in: query
+          required: false
+          description: Time period for forecast
+          schema:
+            type: string
+            enum: [today, week, month]
+            default: today
+            example: today
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/HourlyForecastResponse'
+                  - $ref: '#/components/schemas/DailyForecastResponse'
+              examples:
+                xmlSource:
+                  summary: XML forecast (primary source)
+                  value:
+                    source: "xml"
+                    stationId: "178"
+                    cityId: "telaviv"
+                    cityName: "Tel Aviv"
+                    period: "today"
+                    dateRange:
+                      from: "2026-02-09"
+                      to: "2026-02-11"
+                    forecast:
+                      - time: "2026-02-09 14:00"
+                        temp: "18"
+                        humidity: "65"
+                        windSpeed: "3.5"
+                        windDir: "270"
+                        rain: "0"
+                stationSource:
+                  summary: Station observations (fallback)
+                  value:
+                    source: "station"
+                    stationId: "178"
+                    period: "today"
+                    dateRange:
+                      from: "2026-02-09"
+                      to: "2026-02-11"
+                    forecast:
+                      - time: "2026-02-09 14:00"
+                        temp: "18.1"
+                        humidity: "64"
+                        windSpeed: "3.2"
+                        windDir: "268"
+                        rain: "0.0"
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          description: Station not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/station-detail:
+    get:
+      tags:
+        - Stations
+        - Forecasts
+      summary: Get raw station observations
+      description: Returns raw station observation data (always uses station API, bypasses XML)
+      operationId: getStationDetail
+      parameters:
+        - name: stationId
+          in: query
+          required: true
+          schema:
+            type: integer
+            example: 178
+        - name: period
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [today, week, month]
+            default: today
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/cities:
+    get:
+      tags:
+        - Cities
+      summary: Get all forecast cities
+      description: Returns list of 15 cities that have XML forecast data available
+      operationId: getCities
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/City'
+              example:
+                - id: "jerusalem"
+                  name: "Jerusalem"
+                  nameHebrew: "ירושלים"
+                  location:
+                    latitude: 31.7683
+                    longitude: 35.2137
+                - id: "telaviv"
+                  name: "Tel Aviv"
+                  nameHebrew: "תל אביב"
+                  location:
+                    latitude: 32.0853
+                    longitude: 34.7818
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/city-forecast:
+    get:
+      tags:
+        - Cities
+        - Forecasts
+      summary: Get forecast for specific city
+      description: Returns XML forecast data for a specific city (direct access)
+      operationId: getCityForecast
+      parameters:
+        - name: city
+          in: query
+          required: true
+          description: City ID (e.g., "jerusalem", "telaviv")
+          schema:
+            type: string
+            example: "jerusalem"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  city:
+                    $ref: '#/components/schemas/City'
+                  forecasts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParsedForecast'
+                  downloadDir:
+                    type: string
+                    description: Directory where XML files are stored
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          description: City not found
+        '503':
+          description: No XML data available
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No XML data available. Run: npm run download-xml"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/alerts:
+    get:
+      tags:
+        - Alerts
+      summary: Get all active weather alerts
+      description: Returns all active weather warnings and alerts from XML feeds
+      operationId: getAlerts
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: Number of active alerts
+                  alerts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Alert'
+                  downloadDir:
+                    type: string
+        '503':
+          description: No XML data available
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/country-forecast:
+    get:
+      tags:
+        - Forecasts
+      summary: Get country-wide forecast
+      description: Returns general forecast for entire country
+      operationId: getCountryForecast
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  forecasts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParsedForecast'
+                  downloadDir:
+                    type: string
+        '503':
+          description: No XML data available
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/sea-forecast:
+    get:
+      tags:
+        - Forecasts
+      summary: Get sea forecast
+      description: Returns sea conditions forecast for specified location
+      operationId: getSeaForecast
+      parameters:
+        - name: location
+          in: query
+          required: true
+          description: Sea location
+          schema:
+            type: string
+            enum: [haifa, ashdod, ashkelon, eilat]
+            example: "haifa"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location:
+                    type: string
+                  forecasts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParsedForecast'
+                  downloadDir:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '503':
+          description: No XML data available
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/uvi-forecast:
+    get:
+      tags:
+        - Forecasts
+      summary: Get UV index forecast
+      description: Returns UV index forecast for 15 cities
+      operationId: getUVIForecast
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  forecasts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParsedForecast'
+                  downloadDir:
+                    type: string
+        '503':
+          description: No XML data available
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/cache/stats:
+    get:
+      tags:
+        - Cache
+      summary: Get cache statistics
+      description: Returns statistics about memory and file cache usage
+      operationId: getCacheStats
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  memory:
+                    type: object
+                    properties:
+                      entries:
+                        type: integer
+                        description: Number of entries in memory cache
+                  file:
+                    type: object
+                    properties:
+                      entries:
+                        type: integer
+                        description: Number of files in cache directory
+                      sizeBytes:
+                        type: integer
+                        description: Total size of cache in bytes
+                      sizeMB:
+                        type: string
+                        description: Total size formatted as MB
+              example:
+                memory:
+                  entries: 5
+                file:
+                  entries: 12
+                  sizeBytes: 1048576
+                  sizeMB: "1.00"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/cache/clear:
+    post:
+      tags:
+        - Cache
+      summary: Clear all caches
+      description: Clears both memory and file caches
+      operationId: clearCache
+      responses:
+        '200':
+          description: Cache cleared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Cache cleared successfully"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/health:
+    get:
+      tags:
+        - Cache
+      summary: Health check
+      description: Simple health check endpoint
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+components:
+  schemas:
+    Station:
+      type: object
+      properties:
+        stationId:
+          type: integer
+        name:
+          type: string
+        shortName:
+          type: string
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+            longitude:
+              type: number
+        active:
+          type: boolean
+        owner:
+          type: string
+        regionId:
+          type: integer
+        monitors:
+          type: array
+          items:
+            type: object
+            properties:
+              channelId:
+                type: integer
+              name:
+                type: string
+              units:
+                type: string
+              active:
+                type: boolean
+
+    City:
+      type: object
+      properties:
+        id:
+          type: string
+          description: City identifier
+          example: "jerusalem"
+        name:
+          type: string
+          description: City name in English
+          example: "Jerusalem"
+        nameHebrew:
+          type: string
+          description: City name in Hebrew
+          example: "ירושלים"
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+            longitude:
+              type: number
+
+    HourlyForecastResponse:
+      type: object
+      properties:
+        source:
+          type: string
+          enum: [xml, station]
+        stationId:
+          type: string
+        cityId:
+          type: string
+        cityName:
+          type: string
+        period:
+          type: string
+          enum: [today]
+        dateRange:
+          $ref: '#/components/schemas/DateRange'
+        forecast:
+          type: array
+          items:
+            $ref: '#/components/schemas/HourlyForecast'
+
+    DailyForecastResponse:
+      type: object
+      properties:
+        source:
+          type: string
+          enum: [xml, station]
+        stationId:
+          type: string
+        cityId:
+          type: string
+        cityName:
+          type: string
+        period:
+          type: string
+          enum: [week, month]
+        dateRange:
+          $ref: '#/components/schemas/DateRange'
+        forecast:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyForecast'
+
+    HourlyForecast:
+      type: object
+      properties:
+        time:
+          type: string
+          description: Hour timestamp
+          example: "2026-02-09 14:00"
+        temp:
+          type: string
+          description: Temperature in Celsius
+        humidity:
+          type: string
+          description: Humidity percentage
+        windSpeed:
+          type: string
+          description: Wind speed in m/s
+        windDir:
+          type: string
+          description: Wind direction in degrees
+        rain:
+          type: string
+          description: Rainfall in mm
+
+    DailyForecast:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        tempMin:
+          type: string
+        tempMax:
+          type: string
+        tempCurrent:
+          type: string
+        humidity:
+          type: string
+        windSpeed:
+          type: string
+        rain:
+          type: string
+
+    StationDetailResponse:
+      type: object
+      properties:
+        stationId:
+          type: integer
+        dateRange:
+          $ref: '#/components/schemas/DateRange'
+        channels:
+          type: array
+          items:
+            type: object
+            properties:
+              channelId:
+                type: integer
+              data:
+                type: object
+        period:
+          type: string
+
+    ParsedForecast:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        pubDate:
+          type: string
+        link:
+          type: string
+
+    Alert:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        pubDate:
+          type: string
+        severity:
+          type: string
+        regions:
+          type: array
+          items:
+            type: string
+
+    DateRange:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+  responses:
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Latitude and longitude are required"
+
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Failed to fetch forecast data"

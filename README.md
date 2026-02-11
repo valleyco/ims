@@ -1,18 +1,28 @@
 # 🌤️ Israel Weather Forecast Application
 
-A beautiful, modern weather forecast application that displays real-time weather data from the Israel Meteorological Service (IMS) API.
+A beautiful, modern weather forecast application that displays real-time weather data from the Israel Meteorological Service (IMS).
+
+## Data Sources
+
+The application uses a **hybrid approach**:
+- **Primary**: IMS XML/RSS forecast feeds (professional meteorologist forecasts for 15 major cities)
+- **Fallback**: IMS API real-time observations (10-minute interval data from 187 stations)
+
+This ensures you get professional forecasts when available, with automatic fallback to precise station observations.
 
 ## Features
 
 - 📍 **Automatic Location Detection** - Uses browser geolocation to find your position
-- 🎯 **Nearest Station Finder** - Automatically finds the closest IMS weather station
+- 🎯 **Smart City/Station Matching** - Finds the nearest city with forecast data
 - 📅 **Flexible Time Ranges** - View weather for today, this week, or this month
 - 🎨 **Modern UI** - Beautiful gradient backgrounds, smooth animations, and glass-morphism effects
 - 📱 **Responsive Design** - Works perfectly on desktop, tablet, and mobile devices
 - 🌡️ **Comprehensive Weather Data** - Temperature, humidity, wind speed/direction, and rainfall
 - 📈 **Detailed Forecasts**:
-  - **Today**: Hourly forecast for the last 24 hours
-  - **This Week/Month**: Daily min/max summary for each day
+  - **Today**: Hourly forecast
+  - **This Week/Month**: Daily min/max summary
+- 🔄 **Hybrid Data Source**: XML forecasts with station data fallback
+- ⚠️ **Weather Alerts**: Access to IMS weather warnings and alerts
 
 ## Prerequisites
 
@@ -78,6 +88,11 @@ Navigate to: `http://localhost:3000`
 Comprehensive documentation is organized in the `docs/` folder:
 
 - **[API Documentation](docs/api/)** - IMS API integration, OpenAPI/Swagger specifications
+  - [External IMS API](docs/api/swagger.yaml) - IMS Envista API specification
+  - [Internal API](docs/api/internal-api.yaml) - Application API specification
+- **[XML Feed Integration](docs/XML_FEED_README.md)** - Hybrid data source setup and configuration
+- **[XML Integration Notes](docs/XML_INTEGRATION_NOTES.md)** - Technical details and troubleshooting
+- **[URL Discovery Guide](docs/URL_DISCOVERY_GUIDE.md)** - How to find actual RSS feed URLs
 - **[Architecture](docs/architecture/)** - System design, caching, and TypeScript conversion
 - **[Features](docs/features/)** - Feature implementation guides and testing
 - **[History](docs/history/)** - Development history, fixes, and project summaries

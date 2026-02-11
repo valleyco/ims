@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Jerusalem Forecast</title>
+    <link>https://ims.gov.il</link>
+    <description>5-day weather forecast for Jerusalem</description>
+    <language>en</language>
+    <lastBuildDate>Wed, 11 Feb 2026 09:00:00 GMT</lastBuildDate>
+    
+    <item>
+      <title>Wednesday 12-Feb-2026</title>
+      <description>
+        Clear and cold. Temperature: 8-16°C. 
+        Humidity: 55%. Wind: NW 4 m/s. 
+        No precipitation expected.
+      </description>
+      <pubDate>Wed, 12 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+    
+    <item>
+      <title>Thursday 13-Feb-2026</title>
+      <description>
+        Sunny. Temperature: 10-18°C. 
+        Humidity: 50%. Wind: W 3 m/s. 
+        No precipitation expected.
+      </description>
+      <pubDate>Thu, 13 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+    
+    <item>
+      <title>Friday 14-Feb-2026</title>
+      <description>
+        Mostly sunny and pleasant. Temperature: 12-20°C. 
+        Humidity: 48%. Wind: SW 2 m/s. 
+        No precipitation expected.
+      </description>
+      <pubDate>Fri, 14 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

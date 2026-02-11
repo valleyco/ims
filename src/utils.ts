@@ -88,7 +88,8 @@ export function toRadians(degrees: number): number {
 }
 
 /**
- * Get date range based on period (looking backwards for historical data)
+ * Get date range based on period (looking backwards for historical station data)
+ * Use getForecastDateRange() for forward-looking forecast data instead
  * @param {string} period - 'today', 'week', or 'month'
  * @returns {DateRange} Object with 'from' and 'to' date strings (YYYY-MM-DD)
  */
@@ -118,6 +119,40 @@ export function getDateRange(period: string): DateRange {
   return {
     from: startDate.toISOString().split('T')[0],
     to: today.toISOString().split('T')[0]
+  };
+}
+
+/**
+ * Get date range for forecast data (looking forward)
+ * @param {string} period - 'today', 'week', or 'month'
+ * @returns {DateRange} Object with 'from' and 'to' date strings (YYYY-MM-DD)
+ */
+export function getForecastDateRange(period: string): DateRange {
+  const now = new Date();
+  // Use UTC to avoid timezone issues
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const endDate = new Date(today);
+  
+  switch (period) {
+    case 'today':
+      // Today + next day (48 hours forward)
+      endDate.setUTCDate(today.getUTCDate() + 1);
+      break;
+    case 'week':
+      // Next 7 days (including today)
+      endDate.setUTCDate(today.getUTCDate() + 6);
+      break;
+    case 'month':
+      // Next 30 days (including today)
+      endDate.setUTCDate(today.getUTCDate() + 29);
+      break;
+    default:
+      endDate.setUTCDate(today.getUTCDate() + 1);
+  }
+  
+  return {
+    from: today.toISOString().split('T')[0],
+    to: endDate.toISOString().split('T')[0]
   };
 }
 

@@ -1,0 +1,64 @@
+{
+  "channelId": 7,
+  "stationId": 178,
+  "data": {
+    "channel": {
+      "name": "TD",
+      "units": "°C"
+    },
+    "datetime": [
+      "2026-02-11T00:00:00Z",
+      "2026-02-11T01:00:00Z",
+      "2026-02-11T02:00:00Z",
+      "2026-02-11T03:00:00Z",
+      "2026-02-11T04:00:00Z",
+      "2026-02-11T05:00:00Z",
+      "2026-02-11T06:00:00Z",
+      "2026-02-11T07:00:00Z",
+      "2026-02-11T08:00:00Z",
+      "2026-02-11T09:00:00Z"
+    ],
+    "data": [
+      {
+        "datetime": "2026-02-11T00:00:00Z",
+        "channels": [{ "name": "TD", "value": 16.5, "status": 1, "valid": true }]
+      },
+      {
+        "datetime": "2026-02-11T01:00:00Z",
+        "channels": [{ "name": "TD", "value": 16.2, "status": 1, "valid": true }]
+      },
+      {
+        "datetime": "2026-02-11T02:00:00Z",
+        "channels": [{ "name": "TD", "value": 15.8, "status": 1, "valid": true }]
+      },
+      {
+        "datetime": "2026-02-11T03:00:00Z",
+        "channels": [{ "name": "TD", "value": 15.5, "status": 1, "valid": true }]
+      },
+      {
+        "datetime": "2026-02-11T04:00:00Z",
+        "channels": [{ "name": "TD", "value": 15.3, "status": 1, "valid": true }]
+      },
+      {
+        "datetime": "2026-02-11T05:00:00Z",
+        "channels": [{ "name": "TD", "value": 15.1, "status": 1, "valid": true }]
+      },
+      {
+        "datetime": "2026-02-11T06:00:00Z",
+        "channels": [{ "name": "TD", "value": 15.5, "status": 1, "valid": true }]
+      },
+      {
+        "datetime": "2026-02-11T07:00:00Z",
+        "channels": [{ "name": "TD", "value": 16.8, "status": 1, "valid": true }]
+      },
+      {
+        "datetime": "2026-02-11T08:00:00Z",
+        "channels": [{ "name": "TD", "value": 18.2, "status": 1, "valid": true }]
+      },
+      {
+        "datetime": "2026-02-11T09:00:00Z",
+        "channels": [{ "name": "TD", "value": 19.5, "status": 1, "valid": true }]
+      }
+    ]
+  }
+}

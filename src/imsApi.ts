@@ -4,9 +4,10 @@
  */
 
 import fetch from 'node-fetch';
+import { config } from './config';
 
-const IMS_API_BASE = 'https://api.ims.gov.il/v1/envista';
-const IMS_API_TOKEN = process.env.IMS_API_TOKEN;
+const IMS_API_BASE = config.IMS_API_BASE;
+const IMS_API_TOKEN = config.IMS_API_TOKEN;
 
 // Type definitions for IMS API responses
 

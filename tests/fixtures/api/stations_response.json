@@ -1,0 +1,44 @@
+{
+  "stations": [
+    {
+      "stationId": 178,
+      "name": "Tel Aviv Coast",
+      "location": {
+        "latitude": 32.0853,
+        "longitude": 34.7818
+      },
+      "active": true,
+      "monitors": [
+        { "name": "TD", "units": "°C" },
+        { "name": "RH", "units": "%" },
+        { "name": "WS", "units": "m/s" }
+      ]
+    },
+    {
+      "stationId": 31,
+      "name": "Jerusalem Center",
+      "location": {
+        "latitude": 31.7683,
+        "longitude": 35.2137
+      },
+      "active": true,
+      "monitors": [
+        { "name": "TD", "units": "°C" },
+        { "name": "RH", "units": "%" }
+      ]
+    },
+    {
+      "stationId": 6,
+      "name": "Haifa Port",
+      "location": {
+        "latitude": 32.8191,
+        "longitude": 34.9983
+      },
+      "active": true,
+      "monitors": [
+        { "name": "TD", "units": "°C" },
+        { "name": "WS", "units": "m/s" }
+      ]
+    }
+  ]
+}

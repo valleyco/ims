@@ -9,7 +9,14 @@
     "dev:watch": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "clean": "rm -rf dist",
-    "prebuild": "npm run clean"
+    "prebuild": "npm run clean",
+    "download-xml": "ts-node scripts/download-xml-feeds.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "test:verbose": "jest --verbose"
   },
   "keywords": [
     "weather",
@@ -23,14 +30,23 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "node-fetch": "^2.7.0"
+    "node-cron": "^4.2.1",
+    "node-fetch": "^2.7.0",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
     "@types/node": "^25.2.0",
+    "@types/node-cron": "^3.0.11",
     "@types/node-fetch": "^2.6.13",
+    "@types/supertest": "^6.0.3",
+    "@types/xml2js": "^0.4.14",
+    "jest": "^30.2.0",
     "nodemon": "^3.1.11",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
