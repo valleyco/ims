@@ -4,6 +4,17 @@
 
 The IMS website uses Angular templates to generate RSS feed URLs dynamically on the client side. This means the actual URLs are not visible in the HTML source code. To discover them, you need to use browser Developer Tools to capture the URLs when clicking on feed links.
 
+## IMS XML Pages
+
+| Page | URL | Purpose |
+|------|-----|---------|
+| **RSS Forecasts & Alerts** | [ims.gov.il/en/RSS_ForecastAlerts](https://ims.gov.il/en/RSS_ForecastAlerts) | Forecast and alert RSS feeds |
+| **Current Data XML** | [ims.gov.il/en/CurrentDataXML](https://ims.gov.il/en/CurrentDataXML) | Observations and forecast XML data |
+
+## IMS Update Schedule
+
+Forecasts are updated **twice daily** (morning and afternoon). Additional updates are published when weather conditions change. See [IMS_XML_REFERENCE.md](IMS_XML_REFERENCE.md) for full details.
+
 ## Prerequisites
 
 - Modern web browser (Chrome, Firefox, Edge, or Safari)
@@ -132,7 +143,7 @@ Visibility Warnings: [paste URL here]
 Marine Warnings: [paste URL here]
 ```
 
-## Alternative Method: View Page Source
+## Alternative Method: Address Bar
 
 If the Network tab is confusing, you can also:
 
@@ -141,6 +152,8 @@ If the Network tab is confusing, you can also:
 3. Copy the URL from the address bar
 
 This method is simpler but requires clicking each link individually.
+
+**Tip**: The [CurrentDataXML](https://ims.gov.il/en/CurrentDataXML) page may have different XML feeds (observations vs forecasts). Use the same discovery process there if needed.
 
 ## Troubleshooting
 
@@ -172,24 +185,34 @@ Once you have 2-3 example URLs, share them with your development team. They can:
 
 ## City ID Reference (from RSS page)
 
-The city IDs visible in the Angular templates are:
-- 31 - (First city)
-- 6 - (Second city)
-- 8 - (Third city)
-- 75 - (Fourth city)
-- 3 - (Fifth city)
-- 40 - (Sixth city)
-- 1 - (Seventh city)
-- 77 - (Eighth city)
-- 76 - (Ninth city)
-- 78 - (Tenth city)
-- 80 - (Eleventh city)
-- 33 - (Twelfth city)
-- 50 - (Thirteenth city)
-- 79 - (Fourteenth city)
-- 2 - (Fifteenth city)
+| ID | City |
+|----|------|
+| 31 | Jerusalem |
+| 6 | Haifa |
+| 8 | Beer Sheva |
+| 75 | Eilat |
+| 3 | Tiberias |
+| 40 | Nazareth |
+| 1 | Tel Aviv |
+| 77 | Afula |
+| 76 | Beit Dagan |
+| 78 | Zefat |
+| 80 | Lod |
+| 33 | Dimona |
+| 50 | Yotvata |
+| 79 | Dead Sea |
+| 2 | Mitzpe Ramon |
 
-**Note**: The actual city names are hidden in Angular variables. The URLs you discover will reveal which ID maps to which city.
+## Sea Location ID Reference
+
+| ID | Location |
+|----|----------|
+| 212 | Haifa Port |
+| 213 | Ashdod Port |
+| 211 | Ashkelon |
+| 214 | Eilat |
+
+For full reference, see [IMS_XML_REFERENCE.md](IMS_XML_REFERENCE.md).
 
 ## Need Help?
 

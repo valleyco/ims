@@ -1,6 +1,11 @@
 /**
  * XML Data Manager
  * Manages XML data lifecycle: checking freshness, auto-downloading, validation
+ *
+ * IMS Update Schedule (from https://ims.gov.il/en/RSS_ForecastAlerts):
+ * - Forecasts are updated twice daily (morning and afternoon)
+ * - Additional updates when weather conditions change
+ * - Stale threshold set to 6h to catch updates promptly
  */
 
 import path from 'path';
@@ -68,9 +73,8 @@ export function getDataStatus(): DataStatus {
     
     const ageMs = Date.now() - lastUpdate.getTime();
     const ageHours = ageMs / (1000 * 60 * 60);
-    
-    // IMS updates forecast data twice daily (every ~12 hours)
-    // We'll check more frequently (6 hours) to ensure freshness
+
+    /** IMS updates twice daily - 6h threshold catches updates promptly. See docs/IMS_XML_REFERENCE.md */
     const STALE_THRESHOLD_HOURS = 6;
     const isStale = ageHours > STALE_THRESHOLD_HOURS;
     const staleSinceHours = isStale ? ageHours - STALE_THRESHOLD_HOURS : 0;

@@ -10,7 +10,7 @@ import * as cityMapping from './cityStationMapping';
 import * as xmlParser from './xmlParser';
 import * as xmlDownloader from './xmlDownloader';
 import * as forecastAdapter from './forecastAdapter';
-import * as mockForecast from './mockForecast';
+import * as fallbackForecast from './fallbackForecast';
 import * as xmlDataManager from './xmlDataManager';
 
 const app = express();
@@ -263,16 +263,16 @@ app.get('/api/forecast', async (req: Request<{}, {}, {}, ForecastQuery>, res: Re
     const toDate = new Date(dateRange.to);
     const expectedDays = Math.ceil((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     
-    // If we're requesting multiple days but only got 1-2 days of data, use mock forecast
+    // If we're requesting multiple days but only got 1-2 days of data, use fallback forecast
     if (period !== 'today' && forecast.length < Math.min(3, expectedDays)) {
-      console.log(`⚠ Insufficient station data (${forecast.length}/${expectedDays} days), generating mock forecast`);
-      forecast = mockForecast.generateMockForecast(
+      console.log(`⚠ Insufficient station data (${forecast.length}/${expectedDays} days), generating fallback forecast`);
+      forecast = fallbackForecast.generateFallbackForecast(
         period || 'today',
         dateRange.from,
         dateRange.to,
         20 // base temperature in Celsius
       );
-      console.log(`✓ Mock forecast generated: ${forecast.length} entries`);
+      console.log(`✓ Fallback forecast generated: ${forecast.length} entries`);
     }
 
     res.json({

@@ -1,8 +1,8 @@
-# Mock Forecast System
+# Fallback Forecast System
 
 ## Overview
 
-The mock forecast system provides synthetic weather forecast data when real XML forecast feeds are unavailable. This is a fallback mechanism that ensures the application continues to function even when external data sources fail.
+The fallback forecast system provides synthetic weather forecast data when real XML forecast feeds are unavailable. This is a production fallback mechanism that ensures the application continues to function even when external data sources fail, providing degraded service rather than complete failure.
 
 ## Problem Solved
 
@@ -19,9 +19,9 @@ Implemented a 3-tier fallback system:
 
 1. **Primary**: XML/RSS forecast feeds (contains future predictions)
 2. **Secondary**: IMS Station API (historical observations only)
-3. **Tertiary**: Mock forecast generator (synthetic data)
+3. **Tertiary**: Fallback forecast generator (synthetic data)
 
-The mock system activates when:
+The fallback system activates when:
 - XML feeds are unavailable (404 errors, no data downloaded)
 - Station API returns insufficient data for the requested period
 - User requests multi-day forecasts (week/month)
@@ -30,14 +30,19 @@ The mock system activates when:
 
 ### Files Created
 
-**`src/mockForecast.ts`**: Mock data generator
-- `generateMockDailyForecast()` - Creates daily forecasts
-- `generateMockHourlyForecast()` - Creates hourly forecasts  
-- `generateMockForecast()` - Main entry point
+**`src/fallbackForecast.ts`**: Production fallback data generator
+- `generateFallbackDailyForecast()` - Creates daily forecasts
+- `generateFallbackHourlyForecast()` - Creates hourly forecasts  
+- `generateFallbackForecast()` - Main entry point
+
+**`tests/mocks/forecast.mock.ts`**: Test-specific mock utilities
+- Pre-generated test fixtures
+- Edge case generators for testing
+- API response mocks
 
 **Modified: `src/server.ts`**
 - Added logic to detect insufficient data
-- Automatically switches to mock data when needed
+- Automatically switches to fallback data when needed
 - Calculates expected days vs actual days returned
 
 ### Detection Logic
@@ -48,13 +53,13 @@ const fromDate = new Date(dateRange.from);
 const toDate = new Date(dateRange.to);
 const expectedDays = Math.ceil((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-// If we're requesting multiple days but only got 1-2 days, use mock
+// If we're requesting multiple days but only got 1-2 days, use fallback
 if (period !== 'today' && forecast.length < Math.min(3, expectedDays)) {
-  forecast = mockForecast.generateMockForecast(period, dateRange.from, dateRange.to, 20);
+  forecast = fallbackForecast.generateFallbackForecast(period, dateRange.from, dateRange.to, 20);
 }
 ```
 
-## Mock Data Characteristics
+## Fallback Data Characteristics
 
 ### Daily Forecasts
 - Temperature: 15-25°C range with sinusoidal variation
@@ -74,8 +79,8 @@ if (period !== 'today' && forecast.length < Math.min(3, expectedDays)) {
 | Period | Date Range | Data Source | Days Returned |
 |--------|-----------|-------------|---------------|
 | **today** | Feb 11 → Feb 12 | Station API (real) | 11 hours |
-| **week** | Feb 11 → Feb 17 | Mock Generator | 7 days |
-| **month** | Feb 11 → Mar 12 | Mock Generator | 30 days |
+| **week** | Feb 11 → Feb 17 | Fallback Generator | 7 days |
+| **month** | Feb 11 → Mar 12 | Fallback Generator | 30 days |
 
 ## API Response
 
@@ -83,7 +88,7 @@ The response indicates the data source:
 
 ```json
 {
-  "source": "station",  // Can be "xml", "station", or "station" (with mock data)
+  "source": "station",  // Can be "xml", "station", or "station" (with fallback data)
   "stationId": "178",
   "period": "week",
   "dateRange": {
@@ -105,21 +110,21 @@ The response indicates the data source:
 }
 ```
 
-## When Mock Data is Used
+## When Fallback Data is Used
 
-**Logs indicate mock data generation:**
+**Logs indicate fallback data generation:**
 ```
 ⚠ XML forecast unavailable for Tel Aviv, falling back to station data
 → Falling back to station 178 observations
 Channels fetched: 10
 Daily forecast generated: 1 entries
-⚠ Insufficient station data (1/7 days), generating mock forecast
-✓ Mock forecast generated: 7 entries
+⚠ Insufficient station data (1/7 days), generating fallback forecast
+✓ Fallback forecast generated: 7 entries
 ```
 
-## Future: Replacing Mock Data with Real Forecasts
+## Future: Replacing Fallback Data with Real Forecasts
 
-To get real forecast data instead of mock data:
+To get real forecast data instead of fallback data:
 
 1. **Discover actual RSS feed URLs** (see `docs/URL_DISCOVERY_GUIDE.md`)
 2. **Update `src/xmlDownloader.ts`** with correct URLs
@@ -127,33 +132,44 @@ To get real forecast data instead of mock data:
 4. **Restart server**: The system will automatically use XML data
 
 Once valid XML feeds are available:
-- Mock data will no longer be needed
+- Fallback data will no longer be needed
 - Response will show `"source": "xml"`
 - Forecasts will be real meteorological predictions
 
 ## Development/Testing
 
-The mock system is ideal for:
-- ✅ Development without relying on external APIs
-- ✅ Testing UI with full 7-day and 30-day datasets
-- ✅ Demonstrating the application's capabilities
-- ✅ Working offline or when IMS servers are down
+The fallback system provides:
+- ✅ Continuity when external APIs are unavailable
+- ✅ Degraded service instead of complete failure
+- ✅ Consistent data format for frontend
+- ✅ Development capability without external dependencies
+
+For testing purposes, use the mock utilities in `tests/mocks/forecast.mock.ts`:
+```typescript
+import { mockDailyForecastFixture, generateTestDailyForecast } from '../mocks/forecast.mock';
+
+// Use preset fixtures
+const forecast = mockDailyForecastFixture;
+
+// Or generate custom test data
+const testData = generateTestDailyForecast(7, { extremeTemperatures: true });
+```
 
 ## Limitations
 
-Mock data is **synthetic** and should not be used for:
-- ❌ Actual weather predictions
-- ❌ Safety-critical decisions
-- ❌ Production deployments without user awareness
+Fallback data is **synthetic** and should be understood as:
+- ❌ Not actual meteorological predictions
+- ❌ Not suitable for safety-critical decisions
+- ⚠️ Acceptable for maintaining service availability
 
-The UI should ideally display a notice when mock data is being shown.
+The UI should ideally display a notice when fallback data is being shown to inform users that the data is synthetic.
 
 ## Configuration
 
 Base temperature can be adjusted in `server.ts`:
 
 ```typescript
-forecast = mockForecast.generateMockForecast(
+forecast = fallbackForecast.generateFallbackForecast(
   period,
   dateRange.from,
   dateRange.to,
@@ -165,5 +181,14 @@ For Tel Aviv, 20°C is reasonable. Adjust based on:
 - Jerusalem: 18°C
 - Eilat: 25°C
 - Haifa: 19°C
+
+## Production Considerations
+
+When deploying to production:
+
+1. **Monitor Fallback Usage**: Track how often fallback data is used via server logs
+2. **User Notification**: Display clear UI indicators when showing synthetic data
+3. **Logging**: Fallback activation is logged for debugging and monitoring
+4. **API Response**: Consider adding a `synthetic: true` flag in the response when using fallback data
 
 ## Date: February 11, 2026

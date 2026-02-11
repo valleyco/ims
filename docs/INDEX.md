@@ -37,6 +37,7 @@ Located in [`history/`](history/)
 ### XML Integration
 Located in root [`docs/`](.)
 
+- **[IMS_XML_REFERENCE.md](IMS_XML_REFERENCE.md)** - IMS feed reference (schedule, city IDs, URL patterns)
 - **[XML_FEED_README.md](XML_FEED_README.md)** - Complete XML integration guide
 - **[XML_INTEGRATION_NOTES.md](XML_INTEGRATION_NOTES.md)** - Technical implementation details
 - **[URL_DISCOVERY_GUIDE.md](URL_DISCOVERY_GUIDE.md)** - Step-by-step guide to discover RSS feed URLs
@@ -45,7 +46,7 @@ Located in root [`docs/`](.)
 Located in root [`docs/`](.)
 
 - **[FORECAST_DATE_RANGE_FIX.md](FORECAST_DATE_RANGE_FIX.md)** - Fix for forecast returning past dates instead of future dates
-- **[MOCK_FORECAST_SYSTEM.md](MOCK_FORECAST_SYSTEM.md)** - Mock data generator for when XML feeds are unavailable
+- **[FALLBACK_FORECAST_SYSTEM.md](FALLBACK_FORECAST_SYSTEM.md)** - Production fallback generator for when XML feeds are unavailable
 - **[AUTO_XML_DOWNLOAD.md](AUTO_XML_DOWNLOAD.md)** - Automatic XML data management system with scheduling and admin API
 - **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Complete testing infrastructure with Jest (33 passing tests, no external calls)
 

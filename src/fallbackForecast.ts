@@ -1,19 +1,28 @@
 /**
- * Mock Forecast Generator
- * Generates synthetic forecast data when XML feeds are unavailable
- * This is useful for development/testing or as a fallback
+ * Fallback Forecast Generator
+ * 
+ * Generates synthetic forecast data when external data sources are unavailable.
+ * This is used as a last resort in production when both XML feeds and IMS API fail
+ * to provide sufficient forecast data.
+ * 
+ * The generated data is realistic but synthetic, providing a degraded service
+ * rather than complete failure when external APIs are down.
  */
 
 import { DailyForecast, HourlyForecast } from './utils';
 
 /**
- * Generate mock daily forecast data for testing
+ * Generate fallback daily forecast data
+ * 
+ * Used when external APIs fail to provide multi-day forecast data.
+ * Generates realistic synthetic weather data with natural variations.
+ * 
  * @param fromDate Start date (YYYY-MM-DD)
  * @param toDate End date (YYYY-MM-DD)
- * @param baseTemp Base temperature for variations
- * @returns Array of daily forecasts
+ * @param baseTemp Base temperature for variations (default: 18°C)
+ * @returns Array of daily forecasts with min/max/current temperatures
  */
-export function generateMockDailyForecast(
+export function generateFallbackDailyForecast(
   fromDate: string,
   toDate: string,
   baseTemp: number = 18
@@ -59,13 +68,17 @@ export function generateMockDailyForecast(
 }
 
 /**
- * Generate mock hourly forecast data for testing
+ * Generate fallback hourly forecast data
+ * 
+ * Used when external APIs fail to provide hourly forecast data.
+ * Generates realistic synthetic weather data with diurnal temperature patterns.
+ * 
  * @param fromDate Start date (YYYY-MM-DD)
  * @param toDate End date (YYYY-MM-DD)
- * @param baseTemp Base temperature for variations
- * @returns Array of hourly forecasts
+ * @param baseTemp Base temperature for variations (default: 18°C)
+ * @returns Array of hourly forecasts with temperature, humidity, wind data
  */
-export function generateMockHourlyForecast(
+export function generateFallbackHourlyForecast(
   fromDate: string,
   toDate: string,
   baseTemp: number = 18
@@ -114,22 +127,26 @@ export function generateMockHourlyForecast(
 }
 
 /**
- * Generate mock forecast based on period type
- * @param period 'today', 'week', or 'month'
+ * Generate fallback forecast based on period type
+ * 
+ * Main entry point for generating fallback forecast data in production.
+ * Automatically selects hourly or daily format based on the requested period.
+ * 
+ * @param period 'today' (hourly), 'week' (daily), or 'month' (daily)
  * @param fromDate Start date (YYYY-MM-DD)
  * @param toDate End date (YYYY-MM-DD)
- * @param baseTemp Base temperature
- * @returns Array of forecasts (hourly or daily)
+ * @param baseTemp Base temperature in Celsius (default: 18°C)
+ * @returns Array of forecasts in appropriate format (hourly for today, daily for week/month)
  */
-export function generateMockForecast(
+export function generateFallbackForecast(
   period: string,
   fromDate: string,
   toDate: string,
   baseTemp: number = 18
 ): HourlyForecast[] | DailyForecast[] {
   if (period === 'today') {
-    return generateMockHourlyForecast(fromDate, toDate, baseTemp);
+    return generateFallbackHourlyForecast(fromDate, toDate, baseTemp);
   } else {
-    return generateMockDailyForecast(fromDate, toDate, baseTemp);
+    return generateFallbackDailyForecast(fromDate, toDate, baseTemp);
   }
 }
