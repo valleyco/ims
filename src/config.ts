@@ -15,7 +15,8 @@ export const config = {
   IMS_API_TOKEN: process.env.IMS_API_TOKEN || '',
   PORT: process.env.PORT || '3000',
   IMS_API_BASE: 'https://api.ims.gov.il/v1/envista',
-  NODE_ENV: process.env.NODE_ENV || 'development'
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || 'http://localhost:3000'
 } as const;
 
 // Validate required environment variables

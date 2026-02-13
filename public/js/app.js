@@ -200,6 +200,9 @@ async function fetchWeatherData(stationId) {
         // Display weather data
         displayWeatherData(currentData);
         displayForecast(forecastData.forecast, forecastData.period);
+        
+        // Display data source
+        displayDataSource(forecastData.source);
 
         // Hide loading, show content
         weatherLoading.classList.add('hidden');
@@ -415,7 +418,6 @@ function displayDailyForecast(forecastArray, tableHead, tableBody) {
             <th>Date</th>
             <th>Min Temp</th>
             <th>Max Temp</th>
-            <th>Current Temp</th>
             <th>Avg Humidity</th>
             <th>Total Rain</th>
         </tr>
@@ -429,7 +431,6 @@ function displayDailyForecast(forecastArray, tableHead, tableBody) {
     tableBody.innerHTML = forecastArray.map(entry => {
         const minTemp = entry.tempMin || 'N/A';
         const maxTemp = entry.tempMax || 'N/A';
-        const currentTemp = entry.tempCurrent || 'N/A';
         const humidity = entry.humidity || 'N/A';
         const rain = entry.rain || '0.0';
 
@@ -448,7 +449,6 @@ function displayDailyForecast(forecastArray, tableHead, tableBody) {
                 <td>${displayDate}</td>
                 <td>${minTemp}°C</td>
                 <td>${maxTemp}°C</td>
-                <td><strong>${currentTemp}°C</strong></td>
                 <td>${humidity}%</td>
                 <td>${rain} mm</td>
             </tr>
@@ -499,4 +499,34 @@ function hideError() {
     setTimeout(() => {
         errorToast.classList.add('hidden');
     }, 300);
+}
+
+// Display data source indicator
+function displayDataSource(source) {
+    const dataSourceEl = document.getElementById('dataSource');
+    if (!dataSourceEl) return;
+
+    let sourceText = '';
+    let sourceClass = '';
+
+    switch (source) {
+        case 'xml':
+            sourceText = '📡 XML Forecast';
+            sourceClass = 'xml';
+            break;
+        case 'station':
+            sourceText = '📊 Station Observation';
+            sourceClass = 'observation';
+            break;
+        case 'fallback':
+            sourceText = '🔮 Generated Forecast';
+            sourceClass = 'fallback';
+            break;
+        default:
+            sourceText = '❓ Unknown Source';
+            sourceClass = 'fallback';
+    }
+
+    dataSourceEl.textContent = sourceText;
+    dataSourceEl.className = `data-source-badge ${sourceClass}`;
 }

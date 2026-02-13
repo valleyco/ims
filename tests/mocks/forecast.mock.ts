@@ -16,7 +16,6 @@ export const mockDailyForecastFixture: DailyForecast[] = [
     date: '2026-02-11',
     tempMin: '15.0',
     tempMax: '23.0',
-    tempCurrent: '18.0',
     humidity: '65',
     windSpeed: '3.5',
     rain: null
@@ -25,7 +24,6 @@ export const mockDailyForecastFixture: DailyForecast[] = [
     date: '2026-02-12',
     tempMin: '16.0',
     tempMax: '24.0',
-    tempCurrent: '19.0',
     humidity: '62',
     windSpeed: '4.2',
     rain: null
@@ -34,7 +32,6 @@ export const mockDailyForecastFixture: DailyForecast[] = [
     date: '2026-02-13',
     tempMin: '17.0',
     tempMax: '25.0',
-    tempCurrent: '20.0',
     humidity: '60',
     windSpeed: '3.8',
     rain: '2.5'
@@ -43,7 +40,6 @@ export const mockDailyForecastFixture: DailyForecast[] = [
     date: '2026-02-14',
     tempMin: '16.5',
     tempMax: '24.5',
-    tempCurrent: '19.5',
     humidity: '68',
     windSpeed: '4.0',
     rain: null
@@ -52,7 +48,6 @@ export const mockDailyForecastFixture: DailyForecast[] = [
     date: '2026-02-15',
     tempMin: '15.5',
     tempMax: '23.5',
-    tempCurrent: '18.5',
     humidity: '66',
     windSpeed: '3.2',
     rain: null
@@ -61,7 +56,6 @@ export const mockDailyForecastFixture: DailyForecast[] = [
     date: '2026-02-16',
     tempMin: '14.0',
     tempMax: '22.0',
-    tempCurrent: '17.0',
     humidity: '70',
     windSpeed: '5.0',
     rain: '1.8'
@@ -70,7 +64,6 @@ export const mockDailyForecastFixture: DailyForecast[] = [
     date: '2026-02-17',
     tempMin: '13.5',
     tempMax: '21.5',
-    tempCurrent: '16.5',
     humidity: '72',
     windSpeed: '4.5',
     rain: null
@@ -160,7 +153,6 @@ export function generateTestDailyForecast(
       date: dateStr,
       tempMin: options.missingFields ? undefined : `${baseTemp - 5}`,
       tempMax: `${baseTemp + 5}`,
-      tempCurrent: options.includeNullValues ? null : `${baseTemp}`,
       humidity: `${65}`,
       windSpeed: `${3.5}`,
       rain: options.includeNullValues ? null : undefined

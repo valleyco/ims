@@ -530,7 +530,7 @@ body {
 .forecast-table-container {
     overflow-x: auto;
     overflow-y: auto;
-    max-height: 420px; /* Header + 6 rows of content */
+    max-height: 375px; /* Header (~45px) + 6 rows (~55px each) */
     border-radius: 12px;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
     padding: 16px;
@@ -815,6 +815,36 @@ body {
 
 .temp-min {
     color: #2196f3;
+}
+
+/* Data Source Indicator */
+.data-source {
+    margin-top: 8px;
+    font-size: 0.85rem;
+}
+
+.data-source-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-source-badge.xml {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.data-source-badge.observation {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.data-source-badge.fallback {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    color: #333;
 }
 
 /* Print Styles */

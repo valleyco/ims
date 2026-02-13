@@ -3,7 +3,7 @@ import path from 'path';
 
 // Type definitions
 
-export type CacheType = 'stations' | 'forecast';
+export type CacheType = 'stations' | 'forecast' | 'station_data';
 
 export interface CacheParams {
   stationId?: number | string;
@@ -40,8 +40,9 @@ const CACHE_DIR = path.join(__dirname, '../.cache');
 
 // Cache durations (in milliseconds)
 const CACHE_DURATIONS: Record<CacheType, number> = {
-  stations: 48 * 60 * 60 * 1000, // 48 hours
-  forecast: 24 * 60 * 60 * 1000   // 24 hours (1 day)
+  stations: 48 * 60 * 60 * 1000,     // 48 hours
+  forecast: 24 * 60 * 60 * 1000,     // 24 hours (1 day)
+  station_data: 24 * 60 * 60 * 1000  // 24 hours (1 day)
 };
 
 /**
@@ -63,9 +64,9 @@ function getCacheKey(type: CacheType, params: CacheParams = {}): string | null {
   if (type === 'stations') {
     return 'stations_list';
   }
-  if (type === 'forecast') {
+  if (type === 'forecast' || type === 'station_data') {
     const { stationId, from, to } = params;
-    return `forecast_${stationId}_${from}_${to}`;
+    return `${type}_${stationId}_${from}_${to}`;
   }
   return null;
 }

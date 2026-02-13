@@ -236,7 +236,6 @@ export function convertToDailyFormat(
       date,
       tempMin: extracted.tempMin || extracted.temp || 'N/A',
       tempMax: extracted.tempMax || extracted.temp || 'N/A',
-      tempCurrent: extracted.temp || 'N/A',
       humidity: extracted.humidity || 'N/A',
       windSpeed: extracted.windSpeed || 'N/A',
       rain: extracted.rain || '0.0'

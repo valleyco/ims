@@ -74,7 +74,8 @@ export async function getStations(): Promise<Station[]> {
   });
   
   if (!response.ok) {
-    throw new Error(`IMS API error: ${response.status}`);
+    const errorText = await response.text();
+    throw new Error(`IMS API error: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`);
   }
   
   return await response.json() as Station[];
@@ -103,7 +104,8 @@ export async function getStationData(
   });
   
   if (!response.ok) {
-    throw new Error(`IMS API error: ${response.status}`);
+    const errorText = await response.text();
+    throw new Error(`IMS API error: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`);
   }
   
   if (!response.headers.get('content-type')?.includes('application/json')) {

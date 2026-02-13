@@ -20,7 +20,10 @@ const PORT = parseInt(config.PORT);
 cache.initCache();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: config.ALLOWED_ORIGINS.split(',').map(o => o.trim()),
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
@@ -76,6 +79,19 @@ app.get('/api/nearest-station', async (req: Request<{}, {}, {}, NearestStationQu
     const userLat = parseFloat(lat);
     const userLon = parseFloat(lon);
 
+    // Validate coordinates
+    if (isNaN(userLat) || isNaN(userLon)) {
+      return res.status(400).json({ error: 'Invalid latitude or longitude format' });
+    }
+
+    if (userLat < -90 || userLat > 90) {
+      return res.status(400).json({ error: 'Latitude must be between -90 and 90' });
+    }
+
+    if (userLon < -180 || userLon > 180) {
+      return res.status(400).json({ error: 'Longitude must be between -180 and 180' });
+    }
+
     // Get stations list (from cache or fetch)
     const stations = await cache.get<imsApi.Station[]>('stations', {}, {
       fetcher: async () => await imsApi.getStations()
@@ -128,7 +144,17 @@ app.get('/api/station-data', async (req: Request<{}, {}, {}, StationDataQuery>, 
       return res.status(400).json({ error: 'Station ID is required' });
     }
 
-    // Get date range using utils
+    // Validate stationId is numeric
+    if (!/^\d+$/.test(stationId)) {
+      return res.status(400).json({ error: 'Station ID must be a valid number' });
+    }
+
+    // Validate period
+    if (period && !['today', 'week', 'month'].includes(period)) {
+      return res.status(400).json({ error: 'Period must be one of: today, week, month' });
+    }
+
+    // Get date range using backward-looking dates (station API has historical observations)
     const dateRange = utils.getDateRange(period || 'today');
 
     const cacheParams = {
@@ -142,7 +168,7 @@ app.get('/api/station-data', async (req: Request<{}, {}, {}, StationDataQuery>, 
     const channelIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
     // Get data from cache or fetch
-    const responseData = await cache.get<StationDataResponse>('forecast', cacheParams, {
+    const responseData = await cache.get<StationDataResponse>('station_data', cacheParams, {
       fetcher: async () => {
         const weatherData = await imsApi.getStationDataMultiChannel(
           parseInt(stationId),
@@ -153,16 +179,14 @@ app.get('/api/station-data', async (req: Request<{}, {}, {}, StationDataQuery>, 
 
         return {
           stationId,
+          period: period || 'today',
           dateRange,
           channels: weatherData
         };
       }
     });
 
-    res.json({
-      ...responseData,
-      period: period || 'today'
-    });
+    res.json(responseData);
   } catch (error) {
     console.error('Error fetching station data:', error);
     res.status(500).json({ error: 'Failed to fetch station data' });
@@ -176,6 +200,16 @@ app.get('/api/forecast', async (req: Request<{}, {}, {}, ForecastQuery>, res: Re
 
     if (!stationId) {
       return res.status(400).json({ error: 'Station ID is required' });
+    }
+
+    // Validate stationId is numeric
+    if (!/^\d+$/.test(stationId)) {
+      return res.status(400).json({ error: 'Station ID must be a valid number' });
+    }
+
+    // Validate period
+    if (period && !['today', 'week', 'month'].includes(period)) {
+      return res.status(400).json({ error: 'Period must be one of: today, week, month' });
     }
 
     // Get date range using utils
@@ -278,7 +312,7 @@ app.get('/api/forecast', async (req: Request<{}, {}, {}, ForecastQuery>, res: Re
     res.json({
       source: 'station',
       stationId,
-      period,
+      period: period || 'today',
       dateRange,
       forecast
     });
@@ -306,8 +340,8 @@ app.get('/api/cache/stats', async (req: Request, res: Response) => {
   }
 });
 
-// Clear all caches
-app.post('/api/cache/clear', async (req: Request, res: Response) => {
+// Clear all caches (DELETE method - REST compliant)
+app.delete('/api/cache', async (req: Request, res: Response) => {
   try {
     await cache.clear();
     res.json({ message: 'Cache cleared successfully' });
@@ -330,39 +364,6 @@ app.get('/api/cities', async (req: Request, res: Response) => {
   }
 });
 
-// Get station detail (raw observations - original implementation)
-app.get('/api/station-detail', async (req: Request<{}, {}, {}, StationDataQuery>, res: Response) => {
-  try {
-    const { stationId, period } = req.query;
-
-    if (!stationId) {
-      return res.status(400).json({ error: 'Station ID is required' });
-    }
-
-    const dateRange = utils.getDateRange(period || 'today');
-
-    const channelIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    const channels = await imsApi.getStationDataMultiChannel(
-      parseInt(stationId),
-      channelIds,
-      dateRange.from,
-      dateRange.to
-    );
-
-    const response: StationDataResponse = {
-      stationId: parseInt(stationId),
-      dateRange,
-      channels,
-      period
-    };
-
-    res.json(response);
-  } catch (error) {
-    console.error('Error fetching station detail:', error);
-    res.status(500).json({ error: 'Failed to fetch station detail' });
-  }
-});
-
 // Get city forecast by city ID (direct XML access)
 app.get('/api/city-forecast', async (req: Request<{}, {}, {}, { city?: string }>, res: Response) => {
   try {
@@ -372,9 +373,10 @@ app.get('/api/city-forecast', async (req: Request<{}, {}, {}, { city?: string }>
       return res.status(400).json({ error: 'City ID is required' });
     }
 
+    // Validate city exists
     const cityInfo = cityMapping.getCityById(city);
     if (!cityInfo) {
-      return res.status(404).json({ error: 'City not found' });
+      return res.status(404).json({ error: 'City not found. Valid cities: jerusalem, telaviv, haifa, beersheva, eilat, tiberias, nazareth, afula, beitdagan, zefat, lod, dimona, yotvata, deadsea, mitzperamon' });
     }
 
     const downloadDir = xmlDownloader.getMostRecentDownloadDir();
@@ -387,8 +389,7 @@ app.get('/api/city-forecast', async (req: Request<{}, {}, {}, { city?: string }>
     
     res.json({
       city: cityInfo,
-      forecasts,
-      downloadDir
+      forecasts
     });
   } catch (error) {
     console.error('Error fetching city forecast:', error);
@@ -409,8 +410,7 @@ app.get('/api/alerts', async (req: Request, res: Response) => {
     
     res.json({
       count: alerts.length,
-      alerts,
-      downloadDir
+      alerts
     });
   } catch (error) {
     console.error('Error fetching alerts:', error);
@@ -430,8 +430,7 @@ app.get('/api/country-forecast', async (req: Request, res: Response) => {
     const forecasts = await xmlParser.getCountryForecast(downloadDir);
     
     res.json({
-      forecasts,
-      downloadDir
+      forecasts
     });
   } catch (error) {
     console.error('Error fetching country forecast:', error);
@@ -448,6 +447,12 @@ app.get('/api/sea-forecast', async (req: Request<{}, {}, {}, { location?: string
       return res.status(400).json({ error: 'Location is required (haifa, ashdod, ashkelon, eilat)' });
     }
 
+    // Validate location
+    const validLocations = ['haifa', 'ashdod', 'ashkelon', 'eilat'];
+    if (!validLocations.includes(location.toLowerCase())) {
+      return res.status(400).json({ error: `Invalid location. Valid options: ${validLocations.join(', ')}` });
+    }
+
     const downloadDir = xmlDownloader.getMostRecentDownloadDir();
     
     if (!downloadDir) {
@@ -458,8 +463,7 @@ app.get('/api/sea-forecast', async (req: Request<{}, {}, {}, { location?: string
     
     res.json({
       location,
-      forecasts,
-      downloadDir
+      forecasts
     });
   } catch (error) {
     console.error('Error fetching sea forecast:', error);
@@ -479,8 +483,7 @@ app.get('/api/uvi-forecast', async (req: Request, res: Response) => {
     const forecasts = await xmlParser.getUVIForecast(downloadDir);
     
     res.json({
-      forecasts,
-      downloadDir
+      forecasts
     });
   } catch (error) {
     console.error('Error fetching UVI forecast:', error);
@@ -488,59 +491,64 @@ app.get('/api/uvi-forecast', async (req: Request, res: Response) => {
   }
 });
 
-// ADMIN ENDPOINTS
+// ADMIN ENDPOINTS (Development only - disabled in production for security)
+if (config.NODE_ENV === 'development') {
+  // Get XML data status
+  app.get('/api/admin/data-status', (req: Request, res: Response) => {
+    try {
+      const status = xmlDataManager.getDataStatus();
+      const message = xmlDataManager.getStatusMessage();
+      const needsUrgent = xmlDataManager.needsUrgentRefresh();
+      
+      res.json({
+        ...status,
+        message,
+        needsUrgentRefresh: needsUrgent,
+        recommendation: needsUrgent 
+          ? 'Data is very stale, refresh recommended' 
+          : status.isStale 
+            ? 'Data is stale, refresh suggested'
+            : 'Data is fresh, no action needed'
+      });
+    } catch (error) {
+      console.error('Error getting data status:', error);
+      res.status(500).json({ error: 'Failed to get data status' });
+    }
+  });
 
-// Get XML data status
-app.get('/api/admin/data-status', (req: Request, res: Response) => {
-  try {
-    const status = xmlDataManager.getDataStatus();
-    const message = xmlDataManager.getStatusMessage();
-    const needsUrgent = xmlDataManager.needsUrgentRefresh();
-    
-    res.json({
-      ...status,
-      message,
-      needsUrgentRefresh: needsUrgent,
-      recommendation: needsUrgent 
-        ? 'Data is very stale, refresh recommended' 
-        : status.isStale 
-          ? 'Data is stale, refresh suggested'
-          : 'Data is fresh, no action needed'
-    });
-  } catch (error) {
-    console.error('Error getting data status:', error);
-    res.status(500).json({ error: 'Failed to get data status' });
-  }
-});
-
-// Force refresh XML data
-app.post('/api/admin/refresh-xml', async (req: Request, res: Response) => {
-  try {
-    console.log('🔄 Manual XML refresh requested');
-    
-    const startTime = Date.now();
-    const metadata = await xmlDownloader.downloadAllFeeds();
-    xmlDownloader.cleanOldDownloads(7);
-    const duration = Date.now() - startTime;
-    
-    res.json({
-      message: 'XML data refreshed successfully',
-      duration: `${(duration / 1000).toFixed(1)}s`,
-      metadata: {
-        total: metadata.total,
-        successful: metadata.successful,
-        failed: metadata.failed,
-        directory: metadata.directory
-      }
-    });
-  } catch (error) {
-    console.error('❌ Error refreshing XML:', error);
-    res.status(500).json({ 
-      error: 'Failed to refresh XML data',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
+  // Force refresh XML data (POST method - REST compliant)
+  app.post('/api/admin/xml', async (req: Request, res: Response) => {
+    try {
+      console.log('🔄 Manual XML refresh requested');
+      
+      const startTime = Date.now();
+      const metadata = await xmlDownloader.downloadAllFeeds();
+      xmlDownloader.cleanOldDownloads(7);
+      const duration = Date.now() - startTime;
+      
+      res.json({
+        message: 'XML data refreshed successfully',
+        duration: `${(duration / 1000).toFixed(1)}s`,
+        metadata: {
+          total: metadata.total,
+          successful: metadata.successful,
+          failed: metadata.failed,
+          directory: metadata.directory
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error refreshing XML:', error);
+      res.status(500).json({ 
+        error: 'Failed to refresh XML data',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  console.log('🔓 Admin endpoints enabled (development mode)');
+} else {
+  console.log('🔒 Admin endpoints disabled (production mode)');
+}
 
 // Serve index.html for all other routes
 app.get('*', (req: Request, res: Response) => {
@@ -562,7 +570,11 @@ app.listen(PORT, () => {
   } catch (error) {
     console.warn('⚠ Initial XML download failed, server will use fallback data');
     console.error(error);
-    console.log('💡 You can manually refresh XML data via: POST /api/admin/refresh-xml\n');
+    if (config.NODE_ENV === 'development') {
+      console.log('💡 You can manually refresh XML data via: POST /api/admin/xml\n');
+    } else {
+      console.log('💡 XML will auto-refresh on next scheduled run (every 6 hours)\n');
+    }
   }
 })();
 

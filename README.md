@@ -2,6 +2,19 @@
 
 A beautiful, modern weather forecast application that displays real-time weather data from the Israel Meteorological Service (IMS).
 
+## ⚠️ Recent API Changes (February 2026)
+
+The API has undergone a comprehensive refactoring to improve REST compliance and consistency. **This includes breaking changes.**
+
+**Key Changes:**
+- Removed `/api/station-detail` (use `/api/station-data` instead)
+- Cache clear endpoint changed: `POST /api/cache/clear` → `DELETE /api/cache`
+- Admin XML refresh: `POST /api/admin/refresh-xml` → `POST /api/admin/xml`
+- Removed `tempCurrent` from daily forecasts (logically incorrect for future dates)
+- `/api/station-data` now uses forward-looking dates (like `/api/forecast`)
+
+**📖 [Read the full Migration Guide](docs/API_MIGRATION_GUIDE.md)**
+
 ## Data Sources
 
 The application uses a **hybrid approach**:
@@ -137,9 +150,14 @@ The server provides the following API endpoints:
 - `GET /api/nearest-station?lat=X&lon=Y` - Find nearest station to coordinates
 - `GET /api/station-data?stationId=X&period=Y` - Get raw weather data for a station
 - `GET /api/forecast?stationId=X&period=Y` - Get aggregated forecast data (cached 24h)
-- `GET /api/cache/stats` - Get cache statistics
-- `POST /api/cache/clear` - Clear all caches
+- `DELETE /api/cache` - Clear all caches
 - `GET /api/health` - Health check endpoint
+
+**Admin Endpoints (Development Only):**
+- `GET /api/admin/data-status` - Get XML data freshness status
+- `POST /api/admin/xml` - Manually trigger XML download
+
+> **Security Note:** Admin endpoints are disabled in production (`NODE_ENV=production`) to prevent unauthorized access and potential DoS attacks. XML data is automatically managed via cron jobs (every 6 hours).
 
 ### IMS API Documentation
 

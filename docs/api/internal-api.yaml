@@ -49,6 +49,8 @@ tags:
     description: Weather alerts and warnings
   - name: Cache
     description: Cache management operations
+  - name: Admin
+    description: Administrative operations for XML data management
 
 paths:
   /api/stations:
@@ -218,40 +220,6 @@ paths:
           $ref: '#/components/responses/BadRequestError'
         '404':
           description: Station not found
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/station-detail:
-    get:
-      tags:
-        - Stations
-        - Forecasts
-      summary: Get raw station observations
-      description: Returns raw station observation data (always uses station API, bypasses XML)
-      operationId: getStationDetail
-      parameters:
-        - name: stationId
-          in: query
-          required: true
-          schema:
-            type: integer
-            example: 178
-        - name: period
-          in: query
-          required: false
-          schema:
-            type: string
-            enum: [today, week, month]
-            default: today
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StationDetailResponse'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -457,7 +425,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/cache/stats:
+  /api/cache:
     get:
       tags:
         - Cache
@@ -499,13 +467,11 @@ paths:
                   sizeMB: "1.00"
         '500':
           $ref: '#/components/responses/InternalServerError'
-
-  /api/cache/clear:
-    post:
+    delete:
       tags:
         - Cache
       summary: Clear all caches
-      description: Clears both memory and file caches
+      description: Clears both memory and file caches (REST-compliant DELETE method)
       operationId: clearCache
       responses:
         '200':
@@ -542,6 +508,122 @@ paths:
                   timestamp:
                     type: string
                     format: date-time
+
+  /api/admin/data-status:
+    get:
+      tags:
+        - Admin
+      summary: Get XML data status (Development only)
+      description: |
+        Returns status of downloaded XML data including freshness, age, and recommendations.
+        
+        **Security Note:** This endpoint is only available in development mode (NODE_ENV=development).
+        In production, it returns 404 to prevent information disclosure and potential security risks.
+      operationId: getDataStatus
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exists:
+                    type: boolean
+                    description: Whether XML data directory exists
+                  directory:
+                    type: string
+                    description: Path to most recent data directory
+                  age:
+                    type: number
+                    description: Age of data in hours
+                    nullable: true
+                  isStale:
+                    type: boolean
+                    description: Whether data is older than 6 hours
+                  message:
+                    type: string
+                    description: Human-readable status message
+                  needsUrgentRefresh:
+                    type: boolean
+                    description: Whether data is critically stale (>12 hours)
+                  recommendation:
+                    type: string
+                    description: Recommended action
+              example:
+                exists: true
+                directory: "data/2026-02-11/14-30-00"
+                age: 3.5
+                isStale: false
+                message: "XML data is fresh (3.5 hours old)"
+                needsUrgentRefresh: false
+                recommendation: "Data is fresh, no action needed"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/admin/xml:
+    post:
+      tags:
+        - Admin
+      summary: Force refresh XML data (Development only)
+      description: |
+        Manually trigger download of all XML feeds and clean old downloads (REST-compliant POST to resource).
+        
+        **Security Note:** This endpoint is only available in development mode (NODE_ENV=development).
+        In production, it returns 404 to prevent:
+        - Unauthorized resource-intensive operations
+        - Potential DoS attacks via repeated calls
+        - Security risks from unauthenticated admin actions
+        
+        In production, XML data is automatically refreshed via cron job every 6 hours.
+      operationId: refreshXmlData
+      responses:
+        '200':
+          description: XML data refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  duration:
+                    type: string
+                    description: Time taken for refresh
+                  metadata:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        description: Total feeds attempted
+                      successful:
+                        type: integer
+                        description: Successfully downloaded feeds
+                      failed:
+                        type: integer
+                        description: Failed download attempts
+                      directory:
+                        type: string
+                        description: Directory where data was saved
+              example:
+                message: "XML data refreshed successfully"
+                duration: "5.2s"
+                metadata:
+                  total: 20
+                  successful: 18
+                  failed: 2
+                  directory: "data/2026-02-11/14-30-00"
+        '500':
+          description: Failed to refresh XML data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  details:
+                    type: string
 
 components:
   schemas:
@@ -679,35 +761,19 @@ components:
           format: date
         tempMin:
           type: string
+          description: Minimum temperature for the day
         tempMax:
           type: string
-        tempCurrent:
-          type: string
+          description: Maximum temperature for the day
         humidity:
           type: string
+          description: Average humidity percentage
         windSpeed:
           type: string
+          description: Average wind speed in m/s
         rain:
           type: string
-
-    StationDetailResponse:
-      type: object
-      properties:
-        stationId:
-          type: integer
-        dateRange:
-          $ref: '#/components/schemas/DateRange'
-        channels:
-          type: array
-          items:
-            type: object
-            properties:
-              channelId:
-                type: integer
-              data:
-                type: object
-        period:
-          type: string
+          description: Total rainfall in mm (null if no rain)
 
     ParsedForecast:
       type: object

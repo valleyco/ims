@@ -45,6 +45,7 @@ Located in root [`docs/`](.)
 ### Recent Fixes & Enhancements
 Located in root [`docs/`](.)
 
+- **[API_MIGRATION_GUIDE.md](API_MIGRATION_GUIDE.md)** - Migration guide for February 2026 API refactoring (breaking changes)
 - **[FORECAST_DATE_RANGE_FIX.md](FORECAST_DATE_RANGE_FIX.md)** - Fix for forecast returning past dates instead of future dates
 - **[FALLBACK_FORECAST_SYSTEM.md](FALLBACK_FORECAST_SYSTEM.md)** - Production fallback generator for when XML feeds are unavailable
 - **[AUTO_XML_DOWNLOAD.md](AUTO_XML_DOWNLOAD.md)** - Automatic XML data management system with scheduling and admin API

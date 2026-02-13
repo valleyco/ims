@@ -25,7 +25,6 @@ export interface DailyForecast {
   date: string;
   tempMin: string | null;
   tempMax: string | null;
-  tempCurrent: string | null;
   humidity: string | null;
   windSpeed: string | null;
   rain: string | null;
@@ -43,8 +42,6 @@ interface HourlyDataAccumulator {
 interface DailyDataAccumulator {
   date: string;
   temps: number[];
-  lastTemp: number | null;
-  lastTempTime: Date | null;
   humidity: number[];
   windSpeed: number[];
   rain: number[];
@@ -207,7 +204,7 @@ export function aggregateHourly(channels: ChannelDataItem[]): HourlyForecast[] {
 }
 
 /**
- * Aggregate channel data by day (min/max/current)
+ * Aggregate channel data by day (min/max)
  * @param {ChannelDataItem[]} channels - Array of channel data objects
  * @returns {DailyForecast[]} Array of daily aggregated data
  */
@@ -226,8 +223,6 @@ export function aggregateDaily(channels: ChannelDataItem[]): DailyForecast[] {
         dailyData[dayKey] = {
           date: dayKey,
           temps: [],
-          lastTemp: null,
-          lastTempTime: null,
           humidity: [],
           windSpeed: [],
           rain: []
@@ -236,16 +231,10 @@ export function aggregateDaily(channels: ChannelDataItem[]): DailyForecast[] {
 
       if (reading.channels && reading.channels[0]) {
         const value = reading.channels[0].value;
-        const readingTime = new Date(reading.datetime);
         
         switch (channel.channelId) {
           case 7: // Temperature
             dailyData[dayKey].temps.push(value);
-            // Track latest temperature
-            if (!dailyData[dayKey].lastTempTime || readingTime > dailyData[dayKey].lastTempTime) {
-              dailyData[dayKey].lastTemp = value;
-              dailyData[dayKey].lastTempTime = readingTime;
-            }
             break;
           case 8: dailyData[dayKey].humidity.push(value); break;
           case 4: dailyData[dayKey].windSpeed.push(value); break;
@@ -255,12 +244,11 @@ export function aggregateDaily(channels: ChannelDataItem[]): DailyForecast[] {
     });
   });
 
-  // Calculate min/max/current and format
+  // Calculate min/max and format
   return Object.values(dailyData).map(day => ({
     date: day.date,
     tempMin: day.temps.length ? Math.min(...day.temps).toFixed(1) : null,
     tempMax: day.temps.length ? Math.max(...day.temps).toFixed(1) : null,
-    tempCurrent: day.lastTemp !== null ? day.lastTemp.toFixed(1) : null,
     humidity: day.humidity.length ? (day.humidity.reduce((a, b) => a + b, 0) / day.humidity.length).toFixed(0) : null,
     windSpeed: day.windSpeed.length ? (day.windSpeed.reduce((a, b) => a + b, 0) / day.windSpeed.length).toFixed(1) : null,
     rain: day.rain.length ? day.rain.reduce((a, b) => a + b, 0).toFixed(1) : null

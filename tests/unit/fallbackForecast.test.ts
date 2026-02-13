@@ -31,7 +31,6 @@ describe('Fallback Forecast Module', () => {
       expect(result[0]).toHaveProperty('date');
       expect(result[0]).toHaveProperty('tempMin');
       expect(result[0]).toHaveProperty('tempMax');
-      expect(result[0]).toHaveProperty('tempCurrent');
       expect(result[0]).toHaveProperty('humidity');
       expect(result[0]).toHaveProperty('windSpeed');
       expect(result[0]).toHaveProperty('rain');
@@ -49,11 +48,12 @@ describe('Fallback Forecast Module', () => {
     it('should use provided base temperature', () => {
       const result = generateFallbackDailyForecast('2026-02-11', '2026-02-11', 30);
       
-      const tempCurrent = parseFloat(result[0].tempCurrent!);
+      const tempMin = parseFloat(result[0].tempMin!);
+      const tempMax = parseFloat(result[0].tempMax!);
       
       // Should be close to base temp (30°C) with some variation
-      expect(tempCurrent).toBeGreaterThan(25);
-      expect(tempCurrent).toBeLessThan(35);
+      expect(tempMin).toBeGreaterThan(22);
+      expect(tempMax).toBeLessThan(38);
     });
   });
   

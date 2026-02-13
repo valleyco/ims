@@ -20,7 +20,7 @@ import { DailyForecast, HourlyForecast } from './utils';
  * @param fromDate Start date (YYYY-MM-DD)
  * @param toDate End date (YYYY-MM-DD)
  * @param baseTemp Base temperature for variations (default: 18°C)
- * @returns Array of daily forecasts with min/max/current temperatures
+ * @returns Array of daily forecasts with min/max temperatures
  */
 export function generateFallbackDailyForecast(
   fromDate: string,
@@ -43,7 +43,6 @@ export function generateFallbackDailyForecast(
 
     const tempMin = (baseTemp + tempVariation - 3 + dailyVariation).toFixed(1);
     const tempMax = (baseTemp + tempVariation + 5 + dailyVariation).toFixed(1);
-    const tempCurrent = (baseTemp + tempVariation + dailyVariation).toFixed(1);
 
     // Generate realistic weather values
     const humidity = (60 + Math.random() * 20).toFixed(0); // 60-80%
@@ -54,7 +53,6 @@ export function generateFallbackDailyForecast(
       date: dateStr,
       tempMin,
       tempMax,
-      tempCurrent,
       humidity,
       windSpeed,
       rain
